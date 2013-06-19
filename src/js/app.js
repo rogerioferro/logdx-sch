@@ -5,6 +5,10 @@ goog.require('goog.dom.ViewportSizeMonitor');
 goog.require('goog.events');
 goog.require('goog.style');
 goog.require('goog.ui.SplitPane');
+
+goog.require('goog.events.EventType');
+goog.require('goog.ui.Dialog');
+
 goog.require('logdx.sch.canvas');
 goog.require('logdx.sch.paper');
 goog.require('logdx.sch.sheet.orientation');
@@ -21,8 +25,12 @@ goog.require('logdx.sch.toolbar');
  * @constructor
  */
 logdx.sch.app = function(parent) {
-  this.toolbar = new logdx.sch.toolbar(parent, this);
 
+  /** @type {goog.math.Size} */
+  this.ppi = this.getMonitorPpi();
+  //this.ppi = new goog.math.Size(110.27,110.27);
+  
+  this.toolbar = new logdx.sch.toolbar(parent, this);
   /**
    * The paper properties.
    * @type {logdx.sch.paper}
@@ -39,7 +47,7 @@ logdx.sch.app = function(parent) {
    * Canvas object.
    * @type {logdx.sch.canvas}
    */
-  this.canvas = new logdx.sch.canvas();
+  this.canvas = new logdx.sch.canvas(this.ppi);
   this.canvas.setSheetSize(new goog.math.Size(
       this.paper.getWidth(), this.paper.getHeight()));
 
@@ -64,5 +72,36 @@ logdx.sch.app = function(parent) {
   this.canvas.listen(logdx.sch.canvas.EventType.ZOOM, function(e){
     this.toolbar.updateZoom(e.target.getZoom());
   },false,this);
-
+  
+  //console.log('x:'+this.dpi.width+';y:'+this.dpi.height);
+  
 };
+
+/**
+ * Setup Dialog.
+ */
+logdx.sch.app.prototype.setupDialog = function() {
+  //console.log('setup selected...');
+  var dlg = new goog.ui.Dialog();
+  
+  dlg.setContent('dialog test...');
+  dlg.setTitle('Setup');
+  dlg.setButtonSet(goog.ui.Dialog.ButtonSet.OK_CANCEL);
+  dlg.setVisible(true);
+};
+
+/**
+ * Get Monitor PPI.
+ * @return {goog.math.Size}
+ */
+logdx.sch.app.prototype.getMonitorPpi = function() {
+  var header = {'style': 'position:absolute;width:1000in; height:1000in;'};
+  var element = goog.dom.createDom('div', header);
+  goog.dom.appendChild(document.body, element);
+  /** @type {goog.math.Size} */
+  var size = goog.style.getSize(element);
+  size.width /= 1000;
+  size.height /= 1000;
+  goog.dom.removeNode(element);
+  return size;
+}

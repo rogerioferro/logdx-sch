@@ -1,14 +1,14 @@
-.logdx-sch-canvas-background{
+.log-canvas-background{
   background : #ebebeb;
   border : 0;
   cursor : default;
 }
 
-.logdx-sch-canvas-background.logdx-sch-canvas-move {
+.log-canvas-background.log-canvas-move {
   cursor : move;
 }
 
-.logdx-sch-canvas-sheet{
+.log-canvas-sheet{
   background : #fff;
   border: 1px solid #d4d4d4;
 }

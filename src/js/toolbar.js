@@ -101,11 +101,11 @@ logdx.sch.toolbar.prototype.addMenuBar = function(toolbar) {
   var download_item = this.addMenuItem(file_menu, 'Download as PDF',
     goog.getCssName('goog-icon-download'));
   file_menu.addChild(new goog.ui.MenuSeparator(), true);
-  var page_setup_item = this.addMenuItem(file_menu, 'Page Setup...');
+  var setup_item = this.addMenuItem(file_menu, 'Setup...');
 
-//  new_item.listen(goog.ui.Component.EventType.ACTION, function(e){
-//    console.log('New Selected...');
-//  },false,this);
+  setup_item.listen(goog.ui.Component.EventType.ACTION, function(e){
+    this.app.setupDialog();
+  },false,this);
 
   /**
    * Edit Menu

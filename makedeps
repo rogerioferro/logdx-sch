@@ -1,0 +1,3 @@
+./lib/closure/bin/build/depswriter.py  \
+    --root_with_prefix="src ../../../src" \
+    --output_file=src/js/logdx-deps.js

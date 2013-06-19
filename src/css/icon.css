@@ -1,0 +1,139 @@
+/* Base class for all icon elements. */
+
+.goog-menuitem-icon {
+  height: 16px;
+  width: 16px;
+  background-image: url(../img/icons_hover_active_160x160.png);
+  background-repeat: no-repeat;
+  vertical-align: middle;
+}
+
+.goog-menuitem-highlight .goog-menuitem-icon{
+  background-image: url(../img/icons_default_160x160.png);
+}
+
+.icon {
+  height: 16px;
+  width: 16px;
+  background-image: url(../img/icons_default_160x160.png);
+  background-repeat: no-repeat;
+  vertical-align: middle;
+  margin-top: 2px;
+}
+
+.goog-toolbar-menu-button-hover .icon,
+.goog-toolbar-button-hover .icon {
+  background-image: url(../img/icons_hover_default_160x160.png);
+}
+
+.goog-toolbar-button-selected .icon,
+.goog-toolbar-button-checked .icon,
+.goog-toolbar-button-active .icon {
+  background-image: url(../img/icons_active_160x160.png);
+}
+
+.goog-toolbar-button-hover.goog-toolbar-button-selected .icon,
+.goog-toolbar-button-hover.goog-toolbar-button-checked .icon,
+.goog-toolbar-button-hover.goog-toolbar-button-active .icon {
+  background-image: url(../img/icons_hover_active_160x160.png);
+}
+
+/* Undo. */
+.goog-icon-undo {
+  background-position: 0 0;
+}
+
+/* Redo. */
+.goog-icon-redo {
+  background-position: -16px 0;
+}
+
+/* Copy. */
+.goog-icon-copy {
+  background-position: -32px 0;
+}
+
+/* Cut. */
+.goog-icon-cut {
+  background-position: -48px 0;
+}
+
+/* Paste. */
+.goog-icon-paste {
+  background-position: -64px 0;
+} 
+
+/* Cursor. */
+.goog-icon-cursor {
+  background-position: -80px 0;
+} 
+
+/* Move. */
+.goog-icon-move {
+  background-position: -96px 0;
+} 
+
+/* Folder Open. */
+.goog-icon-folder-open {
+  background-position: -112px 0;
+} 
+
+/* File. */
+.goog-icon-file {
+  background-position: -128px 0;
+} 
+
+/* Download. */
+.goog-icon-download {
+  background-position: -144px 0;
+} 
+
+/* Zoom In. */
+.goog-icon-zoom-in {
+  background-position: 0 -16px;
+}
+
+/* Zoom Out. */
+.goog-icon-zoom-out {
+  background-position: -16px -16px;
+}
+
+/* chevron-sign-right. */
+.goog-icon-chevron-right {
+  background-position: -32px -16px;
+}
+
+/* chevron-sign-left. */
+.goog-icon-chevron-left {
+  background-position: -48px -16px;
+}
+
+/* Minus Signal. */
+.goog-icon-minus {
+  background-position: -64px -16px;
+} 
+
+/* Plus Signal. */
+.goog-icon-plus {
+  background-position: -80px -16px;
+} 
+
+/* caret-up. */
+.goog-icon-caret-up {
+  background-position: -96px -16px;
+} 
+
+/* caret-down. */
+.goog-icon-folder-down {
+  background-position: -112px -16px;
+} 
+
+/* caret-left. */
+.goog-icon-caret-left {
+  background-position: -128px -16px;
+} 
+
+/* caret-right. */
+.goog-icon-caret-right {
+  background-position: -144px -16px;
+} 

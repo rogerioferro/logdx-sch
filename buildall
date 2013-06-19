@@ -1,0 +1,40 @@
+#clear bin
+rm -r ./bin/*
+
+#make css
+mkdir ./bin/css
+java -jar ./lib/closure-stylesheets.jar \
+    --output-file bin/css/logdx-sch.css \
+    --output-renaming-map-format CLOSURE_COMPILED \
+    --rename CLOSURE \
+    --output-renaming-map src/js/renaming_map.js \
+    src/css/*.css
+
+#make js
+./lib/closure/bin/build/closurebuilder.py \
+  --root=lib/ \
+  --root=src/js/ \
+  --namespace="logdx.sch.init" \
+  --output_mode=compiled \
+  --compiler_jar=lib/compiler.jar \
+  --compiler_flags=--warning_level=VERBOSE \
+  --compiler_flags=--jscomp_warning=missingProperties \
+  --compiler_flags=--jscomp_warning=checkTypes \
+  --compiler_flags=--js=src/js/renaming_map.js \
+  --compiler_flags=--compilation_level=ADVANCED_OPTIMIZATIONS \
+  --output_file=bin/logdx-sch.js
+
+#  --compiler_flags=--compilation_level=WHITESPACE_ONLY \
+#  --compiler_flags=--compilation_level=SIMPLE_OPTIMIZATIONS \
+#  --compiler_flags=--compilation_level=ADVANCED_OPTIMIZATIONS \
+#  --compiler_flags=--debug=true \
+#  --compiler_flags="--formatting=PRETTY_PRINT" \
+#  --compiler_flags="--language_in=ECMASCRIPT5" \
+#  --compiler_flags="--define=goog.userAgent.ASSUME_WEBKIT=true" \
+
+
+#copy files to bin
+cp -r ./src/bin/* ./bin
+
+#copy images to bin
+cp -r ./src/img ./bin

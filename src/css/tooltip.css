@@ -1,0 +1,40 @@
+
+.log-tooltip {
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #fff;
+  border-radius: 6px;
+  padding: 7px 9px;
+  font-size: 70%;
+  font-weight: bold;
+  position: absolute;
+  z-index: 2103;
+  pointer-events: none;
+}
+
+.log-tooltip-arrow{
+  top: -6px;
+  position: absolute;
+}
+
+.log-tooltip-arrow-back{
+  border: 6px solid;
+  border-color: #fff transparent;
+  left: -6px;
+}
+
+.log-tooltip-arrow-front{
+  border: 5px solid;
+  border-color: #2a2a2a transparent;
+  left: -5px;
+  top: 1px;
+}
+
+.log-tooltip-arrow-back,
+.log-tooltip-arrow-front{
+  width: 0;
+  height: 0;
+  border-top-width: 0;
+  display: block;
+  position: absolute;
+}

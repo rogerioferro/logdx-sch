@@ -1,0 +1,230 @@
+/*
+ * Copyright 2009 The Closure Library Authors. All Rights Reserved.
+ *
+ * Use of this source code is governed by the Apache License, Version 2.0.
+ * See the COPYING file for details.
+ */
+
+/*
+ * Standard styling for toolbars and toolbar items.
+ *
+ * @author attila@google.com (Attila Bodis)
+ */
+
+
+/*
+ * Styles used by goog.ui.ToolbarRenderer.
+ */
+
+.goog-toolbar {
+
+  /* Client apps may override the URL at which they serve the image. */
+  background: #fafafa url(../img/toolbar-bg_1x100.png) 50% 50% repeat-x;
+
+  cursor: default;
+  font: bold 12px Arial, sans-serif;
+  margin: 0;
+  outline: none;
+  padding: 2px;
+  position: relative;
+  zoom: 1; /* The toolbar element must have layout on IE. */
+  padding-left:50px;
+}
+
+/*
+ * Styles used by goog.ui.ToolbarButtonRenderer.
+ */
+
+.goog-toolbar-menu-button,
+.goog-toolbar-button {
+  margin: 0 2px;
+  border: 0;
+  padding: 0;
+  text-decoration: none;
+  list-style: none;
+  vertical-align: middle;
+  cursor: pointer;
+  outline: none;
+}
+
+/* rounded corners. */
+.goog-toolbar-menu-button-outer-box,
+.goog-toolbar-menu-button-inner-box,
+.goog-toolbar-button-inner-box,
+.goog-toolbar-button-outer-box{
+  margin: 0;
+  vertical-align: middle;
+}
+
+.goog-toolbar-menu-button-outer-box,
+.goog-toolbar-button-outer-box {
+  background: #eeeeee url(../img/ui-bg_glass_60_eeeeee_1x400.png) 50% 50% repeat-x;
+  border-radius: 4px;    
+  border: 1px solid #cccccc;
+  padding: 0;  
+  height: 26px;
+  font-family: Arial, sans-serif;
+  color: #3383bb;
+}
+
+.goog-toolbar-menu-button-inner-box,
+.goog-toolbar-button-inner-box {
+  border: 0;
+  padding: 3px 4px;
+  height: 20px;
+}
+
+
+/* Disabled styles. */
+.goog-toolbar-menu-button-disabled,
+.goog-toolbar-button-disabled {
+  opacity: 0.3;
+  -moz-opacity: 0.3;
+  filter: alpha(opacity=30);
+}
+
+.goog-toolbar-menu-button-disabled .goog-toolbar-menu-button-outer-box,
+.goog-toolbar-menu-button-disabled .goog-toolbar-menu-button-inner-box,
+.goog-toolbar-button-disabled .goog-toolbar-button-outer-box,
+.goog-toolbar-button-disabled .goog-toolbar-button-inner-box {
+  /* Disabled text/border color trumps everything else. */
+  color: #333 !important;
+  border-color: #999 !important;
+}
+
+
+/* Hover styles. */
+.goog-toolbar-menu-button-hover .goog-toolbar-menu-button-outer-box,
+.goog-toolbar-button-hover .goog-toolbar-button-outer-box {
+  /* Hover border style wins over active/checked/selected. */
+  background: #eeeeee url(../img/ui-bg_glass_100_f8f8f8_1x400.png) 50% 50% repeat-x;
+  color: #599fcf;
+}
+
+/* Active/checked/selected styles. */
+.goog-toolbar-menu-button-hover.goog-toolbar-menu-button-active .goog-toolbar-menu-button-outer-box,
+.goog-toolbar-menu-button-hover.goog-toolbar-menu-button-open .goog-toolbar-menu-button-outer-box,
+.goog-toolbar-button-hover.goog-toolbar-button-active .goog-toolbar-button-outer-box,
+.goog-toolbar-button-hover.goog-toolbar-button-checked .goog-toolbar-button-outer-box,
+.goog-toolbar-button-hover.goog-toolbar-button-selected .goog-toolbar-button-outer-box{
+  background: #c9c9c9 url(../img/ui-bg_inset-soft_50_c9c9c9_1x100.png) 50% 50% repeat-x;
+  border-color: #c9c9c9;
+  color: #999;
+}
+
+.goog-toolbar-menu-button-active .goog-toolbar-menu-button-inner-box,
+.goog-toolbar-menu-button-open .goog-toolbar-menu-button-inner-box,
+.goog-toolbar-button-active .goog-toolbar-button-inner-box,
+.goog-toolbar-button-checked .goog-toolbar-button-inner-box,
+.goog-toolbar-button-selected .goog-toolbar-button-inner-box {
+  padding: 2px 3px 4px 5px;
+}
+
+.goog-toolbar-menu-button-active .goog-toolbar-menu-button-outer-box,
+.goog-toolbar-menu-button-open .goog-toolbar-menu-button-outer-box,
+.goog-toolbar-button-active .goog-toolbar-button-outer-box,
+.goog-toolbar-button-checked .goog-toolbar-button-outer-box,
+.goog-toolbar-button-selected .goog-toolbar-button-outer-box {
+  background: #999999 url(../img/ui-bg_inset-hard_75_999999_1x100.png) 50% 50% repeat-x;
+  border-color:#999999;     
+  color: #454545;
+}
+
+.goog-toolbar-menu-button-open .goog-toolbar-menu-button-outer-box{
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-width:0;
+  padding-bottom:1px;
+}
+
+/* Pill (collapsed border) styles. */
+.goog-toolbar-menu-button-collapse-right,
+.goog-toolbar-menu-button-collapse-right .goog-toolbar-menu-button-outer-box,
+.goog-toolbar-button-collapse-right,
+.goog-toolbar-button-collapse-right .goog-toolbar-button-outer-box {
+  margin-right: 0 !important;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.goog-toolbar-menu-button-collapse-right .goog-toolbar-menu-button-outer-box,
+.goog-toolbar-button-collapse-right .goog-toolbar-button-outer-box{
+  border-right: 0;
+}
+
+.goog-toolbar-menu-button-collapse-left,
+.goog-toolbar-menu-button-collapse-left .goog-toolbar-menu-button-outer-box,
+.goog-toolbar-button-collapse-left,
+.goog-toolbar-button-collapse-left .goog-toolbar-button-outer-box {
+  margin-left: 0 !important;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+
+/*
+ * Styles used by goog.ui.ToolbarMenuButtonRenderer.
+ */
+
+/* Menu button caption style. */
+.goog-toolbar-menu-button-caption {
+  padding: 0 4px 0 0;
+  vertical-align: middle;
+}
+
+/* Dropdown style. */
+.goog-toolbar-menu-button-dropdown {
+  width: 8px;
+  /* Client apps may override the URL at which they serve the sprite. */
+  background: url(../img/icons_hover_default_160x160.png) no-repeat 0 -144px;
+  vertical-align: middle;
+}
+.goog-toolbar-menu-button-hover .goog-toolbar-menu-button-dropdown{
+  background-image: url(../img/icons_default_160x160.png);
+}
+.goog-toolbar-menu-button-active .goog-toolbar-menu-button-dropdown,
+.goog-toolbar-menu-button-open .goog-toolbar-menu-button-dropdown{
+  background-image: url(../img/icons_active_160x160.png);
+}
+
+/*
+ * Styles used by goog.ui.ToolbarSeparatorRenderer.
+ */
+
+.goog-toolbar-separator {
+  margin: 0 2px;
+  border-left: 1px solid #d6d6d6;
+  border-right: 1px solid #f7f7f7;
+  padding: 0;
+  width: 0;
+  text-decoration: none;
+  list-style: none;
+  outline: none;
+  vertical-align: middle;
+  line-height: normal;
+  font-size: 120%;
+  overflow: hidden;
+  height:28px;
+}
+
+
+/*
+ * Additional styling for toolbar select controls, which always have borders.
+ */
+
+.goog-toolbar-select .goog-toolbar-menu-button-outer-box {
+  border-width: 1px 0;
+  border-style: solid;
+  padding: 0;
+}
+
+.goog-toolbar-select .goog-toolbar-menu-button-inner-box {
+  border-width: 0 1px;
+  border-style: solid;
+  padding: 3px;
+}
+
+.goog-toolbar-select .goog-toolbar-menu-button-outer-box,
+.goog-toolbar-select .goog-toolbar-menu-button-inner-box {
+  border-color: #bfcbdf;
+}

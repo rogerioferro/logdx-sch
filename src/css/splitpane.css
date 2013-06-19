@@ -1,0 +1,23 @@
+    /* These are recommended styles for the default splitpane */
+    .goog-splitpane {
+    }
+
+    .goog-splitpane-handle {
+      background: #d5d5d5;
+      position: absolute;
+    }
+
+    .goog-splitpane-handle-horizontal {
+      cursor: col-resize;
+    }
+
+    .goog-splitpane-handle-vertical {
+      cursor: row-resize;
+    }
+
+    .goog-splitpane-first-container,
+    .goog-splitpane-second-container {
+      border: 1px solid #bbb;
+      overflow: auto;
+      position: absolute;
+    }

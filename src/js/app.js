@@ -8,6 +8,7 @@ goog.require('goog.ui.SplitPane');
 
 goog.require('goog.events.EventType');
 goog.require('goog.ui.Dialog');
+goog.require('goog.ui.Button');
 
 goog.require('logdx.sch.canvas');
 goog.require('logdx.sch.paper');
@@ -65,6 +66,7 @@ logdx.sch.app = function(parent) {
     size.height -= pos.y;
     size.width -= pos.x;
     content.setSize(size);
+    //console.log('resize windows...');
   };
   goog.events.listen(vsm, goog.events.EventType.RESIZE, content_resize);
   content_resize();
@@ -81,13 +83,47 @@ logdx.sch.app = function(parent) {
  * Setup Dialog.
  */
 logdx.sch.app.prototype.setupDialog = function() {
-  //console.log('setup selected...');
-  var dlg = new goog.ui.Dialog();
   
-  dlg.setContent('dialog test...');
+  var div = goog.dom.createDom('div');
+  var label =  goog.dom.createDom('label',{'for':'ppi'});
+  goog.dom.setTextContent(label,'Monitor PPI:');
+  var input = goog.dom.createDom('input',
+              {'name' : 'ppi','id':'ppi',
+               'type' : 'text',
+               'size': 5,
+               'min' : 0,
+               'max' : 1000});
+  goog.dom.appendChild(div,label);
+  goog.dom.appendChild(div,input);
+  
+  var button = new goog.ui.Button('Detect PPI');
+    
+  var dlg = new goog.ui.Dialog();
+  goog.dom.appendChild(dlg.getContentElement(),div);
+  dlg.addChild(button,true);
   dlg.setTitle('Setup');
   dlg.setButtonSet(goog.ui.Dialog.ButtonSet.OK_CANCEL);
   dlg.setVisible(true);
+
+  input.value = this.ppi.width;
+
+  button.listen(goog.ui.Component.EventType.ACTION, function(e) {
+    var size = this.getMonitorPpi();
+    input.value = size.width;
+  },false,this);
+
+
+  goog.events.listen(dlg, goog.ui.Dialog.EventType.SELECT, function(e) {
+    if( e.key == 'ok') {
+      var ppi = parseInt(input.value);
+      if(goog.math.isFiniteNumber(ppi)) {
+        this.ppi.width = ppi;
+        this.ppi.height = ppi;
+        this.canvas.setPpi(this.ppi);
+      }
+    }
+    dlg.dispose();
+  },false,this);
 };
 
 /**

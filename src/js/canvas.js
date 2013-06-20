@@ -44,7 +44,7 @@ logdx.sch.canvas = function(ppi, opt_domHelper) {
    * @type {goog.math.Size}
    * @private
    */
-  this.ppi_ = ppi;
+  this.ppi_ = new goog.math.Size(ppi.width, ppi.height);
   
   /**
    * PPmm size (pixels per millimeter).
@@ -68,15 +68,21 @@ logdx.sch.canvas = function(ppi, opt_domHelper) {
    */
   this.panEnabled_ = false;
 
-    /**
+  /**
    * In pan mode.
    * @type {boolean}
    * @private
    */
   this.panMode_ = false;
 
+  /**
+   * Sheet Size in mm.
+   * @type {goog.math.Size}
+   * @private
+   */
+  this.sheetSize_mm_ = new goog.math.Size(0, 0);
 
-/**
+  /**
    * Sheet Size in px.
    * @type {goog.math.Size}
    * @private
@@ -129,19 +135,44 @@ logdx.sch.canvas.EventType = {
   ZOOM: 'zoom'
 };
 
- /**
- * Set sheet size in "mm".
- * @param {goog.math.Size} size of container.
- * */
+/**
+* Set sheet size in "mm".
+* @param {goog.math.Size} size of container.
+* */
 logdx.sch.canvas.prototype.setSheetSize = function(size) {
-  this.sheetSize_.width = size.width * this.ppmm_.width;
-  this.sheetSize_.height = size.height * this.ppmm_.height;
+  this.sheetSize_mm_.width = size.width;
+  this.sheetSize_mm_.height = size.height;
+  this.updateSheet();
+};
+
+/**
+* Update sheet size.
+* */
+logdx.sch.canvas.prototype.updateSheet = function() {
+  this.sheetSize_.width = this.sheetSize_mm_.width * this.ppmm_.width;
+  this.sheetSize_.height = this.sheetSize_mm_.height * this.ppmm_.height;
 
   if (this.isInDocument()) {
     var parent = goog.dom.getParentElement(this.getElement());
     this.resize(goog.style.getSize(parent));
   }
 };
+
+
+/**
+* Set ppi.
+* @param {goog.math.Size} ppi PPI size.
+* */
+logdx.sch.canvas.prototype.setPpi = function(ppi) {
+  this.ppi_.width = ppi.width;
+  this.ppi_.height = ppi.height;
+  
+  this.ppmm_.width = this.ppi_.width/25.4;
+  this.ppmm_.height = this.ppi_.height/25.4;
+  
+  this.updateSheet();
+};
+
 
 /**
  * getZoom

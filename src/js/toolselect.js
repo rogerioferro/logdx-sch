@@ -27,6 +27,7 @@ goog.inherits(logdx.sch.toolselect, logdx.sch.tool);
  * @override
  */
 logdx.sch.toolselect.prototype.onMouseDown = function() {
+  this.onMouseUp();
   this.zoom = this.canvas.zoom_level_;
   var stroke = new goog.graphics.Stroke(0.2/this.zoom, 'rgba(128,0,128,0.8)');
   var fill = new goog.graphics.SolidFill('#800080', 0.2);

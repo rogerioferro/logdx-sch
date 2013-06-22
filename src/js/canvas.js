@@ -155,7 +155,7 @@ logdx.sch.canvas.EventType = {
  * @param {goog.events.BrowserEvent.MouseButton=} opt_button Mouse button.
  */
 logdx.sch.canvas.prototype.setTool = function(tool, opt_button) {
-  button = opt_button || goog.events.BrowserEvent.MouseButton.LEFT;
+  var button = opt_button || goog.events.BrowserEvent.MouseButton.LEFT;
   tool.setCanvas(this);
   this.tools[button] = tool;
 };
@@ -424,8 +424,13 @@ logdx.sch.canvas.prototype.setPointer = function(tool, event) {
   var mm_offset_y = px_offset_y/ghz;
 
   if(event.type == goog.events.EventType.MOUSEDOWN){
+    tool.event.px_client_down.x = px_client_x;
+    tool.event.px_client_down.y = px_client_y;
     tool.event.px_offset_down.x = px_offset_x;
     tool.event.px_offset_down.y = px_offset_y;
+    
+    tool.event.mm_client_down.x = mm_client_x;
+    tool.event.mm_client_down.y = mm_client_y;
     tool.event.mm_offset_down.x = mm_offset_x;
     tool.event.mm_offset_down.y = mm_offset_y;
   }

@@ -11,11 +11,14 @@ goog.require('goog.ui.Dialog');
 goog.require('goog.ui.Button');
 
 goog.require('logdx.sch.canvas');
+goog.require('logdx.sch.canvas.EventType');
 goog.require('logdx.sch.paper');
 goog.require('logdx.sch.sheet.orientation');
 goog.require('logdx.sch.sheet.size');
 goog.require('logdx.sch.toolbar');
 
+goog.require('logdx.sch.toolselect');
+goog.require('logdx.sch.toolpan');
 
 
 /**
@@ -75,6 +78,10 @@ logdx.sch.app = function(parent) {
     this.toolbar.updateZoom(e.target.getZoom());
   },false,this);
   
+  this.canvas.setTool(new logdx.sch.toolselect());
+  this.canvas.setTool(new logdx.sch.toolpan(),
+    goog.events.BrowserEvent.MouseButton.MIDDLE);
+  
   //console.log('x:'+this.dpi.width+';y:'+this.dpi.height);
   
 };
@@ -84,17 +91,33 @@ logdx.sch.app = function(parent) {
  */
 logdx.sch.app.prototype.setupDialog = function() {
   
-  var div = goog.dom.createDom('div');
-  var label =  goog.dom.createDom('label',{'for':'ppi'});
-  goog.dom.setTextContent(label,'Monitor PPI:');
-  var input = goog.dom.createDom('input',
-              {'name' : 'ppi','id':'ppi',
-               'type' : 'text',
+  var hp = goog.dom.createDom('p');
+  var hlabel =  goog.dom.createDom('label',{'for':'hppi'});
+  goog.dom.setTextContent(hlabel,'Horizontal PPI:');
+  var hinput = goog.dom.createDom('input',
+              {'name' : 'ppi','id':'hppi',
+               'type' : 'number',
                'size': 5,
                'min' : 0,
                'max' : 1000});
-  goog.dom.appendChild(div,label);
-  goog.dom.appendChild(div,input);
+  goog.dom.appendChild(hp,hlabel);
+  goog.dom.appendChild(hp,hinput);
+  
+  var vp = goog.dom.createDom('p');
+  var vlabel =  goog.dom.createDom('label',{'for':'vppi'});
+  goog.dom.setTextContent(vlabel,'Vertical PPI:');
+  var vinput = goog.dom.createDom('input',
+              {'name' : 'ppi','id':'vppi',
+               'type' : 'number',
+               'size': 5,
+               'min' : 0,
+               'max' : 1000});
+  goog.dom.appendChild(vp,vlabel);
+  goog.dom.appendChild(vp,vinput);
+
+  var div = goog.dom.createDom('div');
+  goog.dom.appendChild(div,hp);
+  goog.dom.appendChild(div,vp);
   
   var button = new goog.ui.Button('Detect PPI');
     
@@ -105,20 +128,23 @@ logdx.sch.app.prototype.setupDialog = function() {
   dlg.setButtonSet(goog.ui.Dialog.ButtonSet.OK_CANCEL);
   dlg.setVisible(true);
 
-  input.value = this.ppi.width;
+  hinput.value = this.ppi.width;
+  vinput.value = this.ppi.height;
 
   button.listen(goog.ui.Component.EventType.ACTION, function(e) {
     var size = this.getMonitorPpi();
-    input.value = size.width;
+    hinput.value = size.width;
+    vinput.value = size.height;
   },false,this);
 
 
   goog.events.listen(dlg, goog.ui.Dialog.EventType.SELECT, function(e) {
     if( e.key == 'ok') {
-      var ppi = parseInt(input.value);
-      if(goog.math.isFiniteNumber(ppi)) {
-        this.ppi.width = ppi;
-        this.ppi.height = ppi;
+      var hppi = parseInt(hinput.value);
+      var vppi = parseInt(vinput.value);
+      if(goog.math.isFiniteNumber(hppi) && goog.math.isFiniteNumber(vppi)) {
+        this.ppi.width = hppi;
+        this.ppi.height = vppi;
         this.canvas.setPpi(this.ppi);
       }
     }

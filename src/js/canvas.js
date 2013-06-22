@@ -1,5 +1,3 @@
-
-
 /**
  * @fileoverview Schematic Canvas.
  *
@@ -24,6 +22,8 @@ goog.require('goog.math');
 goog.require('goog.style');
 goog.require('goog.ui.Component');
 
+goog.require('logdx.sch.tool');
+goog.require('logdx.sch.tool.MouseEvent');
 
 
 /**
@@ -38,6 +38,25 @@ goog.require('goog.ui.Component');
 logdx.sch.canvas = function(ppi, opt_domHelper) {
   goog.ui.Component.call(this, opt_domHelper);
 
+
+  //this.toolselect = new logdx.sch.toolselect(this);
+  
+  /**
+   * Mouse event parameters.
+   * @type {Array.<logdx.sch.tool>}
+   */
+  this.tools = new Array();
+   
+   /*test*/
+   /*
+  this.tools[goog.events.BrowserEvent.MouseButton.LEFT] =
+      new logdx.sch.toolselect();
+  this.tools[goog.events.BrowserEvent.MouseButton.LEFT].setCanvas(this);
+
+  this.tools[goog.events.BrowserEvent.MouseButton.MIDDLE] =
+      new logdx.sch.toolpan();
+  this.tools[goog.events.BrowserEvent.MouseButton.MIDDLE].setCanvas(this);
+*/
 
   /**
    * PPI size (pixels per inch).
@@ -59,35 +78,22 @@ logdx.sch.canvas = function(ppi, opt_domHelper) {
    * @type {number}
    * @private
    */
-  this.zoom_ = 1;
+  this.zoom_level_ = 1;
 
-  /**
-   * Enable pan.
-   * @type {boolean}
-   * @private
-   */
-  this.panEnabled_ = false;
-
-  /**
-   * In pan mode.
-   * @type {boolean}
-   * @private
-   */
-  this.panMode_ = false;
 
   /**
    * Sheet Size in mm.
    * @type {goog.math.Size}
    * @private
    */
-  this.sheetSize_mm_ = new goog.math.Size(0, 0);
+  this.sheet_size_in_mm_ = new goog.math.Size(0, 0);
 
   /**
    * Sheet Size in px.
    * @type {goog.math.Size}
    * @private
    */
-  this.sheetSize_ = new goog.math.Size(0, 0);
+  this.sheet_size_in_px_ = new goog.math.Size(0, 0);
 
   /**
    * Graphics object. This object is created once the
@@ -104,7 +110,15 @@ logdx.sch.canvas = function(ppi, opt_domHelper) {
    * @type {Element?}
    * @private
    */
-  this.sheet_ = null;
+  this.sheet_element_ = null;
+  
+  /**
+   * Sheet Position.
+   *
+   * @type {goog.math.Coordinate}
+   * @private
+   */
+  this.sheet_pos_ = new goog.math.Coordinate();
 
   /**
    * Event handler for this object.
@@ -136,12 +150,24 @@ logdx.sch.canvas.EventType = {
 };
 
 /**
+ * Set Tool
+ * @param {logdx.sch.tool} tool Tool object.
+ * @param {goog.events.BrowserEvent.MouseButton=} opt_button Mouse button.
+ */
+logdx.sch.canvas.prototype.setTool = function(tool, opt_button) {
+  button = opt_button || goog.events.BrowserEvent.MouseButton.LEFT;
+  tool.setCanvas(this);
+  this.tools[button] = tool;
+};
+
+
+/**
 * Set sheet size in "mm".
 * @param {goog.math.Size} size of container.
 * */
 logdx.sch.canvas.prototype.setSheetSize = function(size) {
-  this.sheetSize_mm_.width = size.width;
-  this.sheetSize_mm_.height = size.height;
+  this.sheet_size_in_mm_.width = size.width;
+  this.sheet_size_in_mm_.height = size.height;
   this.updateSheet();
 };
 
@@ -149,8 +175,8 @@ logdx.sch.canvas.prototype.setSheetSize = function(size) {
 * Update sheet size.
 * */
 logdx.sch.canvas.prototype.updateSheet = function() {
-  this.sheetSize_.width = this.sheetSize_mm_.width * this.ppmm_.width;
-  this.sheetSize_.height = this.sheetSize_mm_.height * this.ppmm_.height;
+  this.sheet_size_in_px_.width = this.sheet_size_in_mm_.width * this.ppmm_.width;
+  this.sheet_size_in_px_.height = this.sheet_size_in_mm_.height * this.ppmm_.height;
 
   if (this.isInDocument()) {
     var parent = goog.dom.getParentElement(this.getElement());
@@ -170,79 +196,99 @@ logdx.sch.canvas.prototype.setPpi = function(ppi) {
   this.ppmm_.width = this.ppi_.width/25.4;
   this.ppmm_.height = this.ppi_.height/25.4;
   
+  this.updateGraphScale();
   this.updateSheet();
 };
-
 
 /**
  * getZoom
  * @return {number}
  * */
 logdx.sch.canvas.prototype.getZoom = function() {
-  return this.zoom_;
+  return this.zoom_level_;
 };
 /**
  * setZoom
  * @param {number} zoom Zoom Level.
+ * @param {goog.math.Coordinate=} opt_cursor Cursor position.
  * */
-logdx.sch.canvas.prototype.setZoom = function(zoom) {
-  if(this.zoom_ == zoom) return;
-  this.zoom_ = zoom;
+logdx.sch.canvas.prototype.setZoom = function(zoom, opt_cursor) {
+  zoom = Math.min(Math.max(0.01, zoom), 12);
+  if(this.zoom_level_ == zoom) return;
+
+  if(opt_cursor){
+    /** Calculate displacement after zoom */
+    var s_pos = goog.style.getClientPosition(this.sheet_element_);
+    var g = zoom/this.zoom_level_  - 1;
+    opt_cursor.x = Math.round((opt_cursor.x - s_pos.x) * g);
+    opt_cursor.y = Math.round((opt_cursor.y - s_pos.y) * g);
+  }
+
+  this.zoom_level_ = zoom;
+  this.dispatchEvent(logdx.sch.canvas.EventType.ZOOM);
+
   var parent = goog.dom.getParentElement(this.getElement());
-  this.resize(goog.style.getSize(parent));
+  this.resize(goog.style.getSize(parent), opt_cursor);
 };
 /**
  * Fit to Screen
  * */
 logdx.sch.canvas.prototype.fitToScreen = function() {
-  this.setZoom(1);
   var parent = goog.dom.getParentElement(this.getElement());
   var v_size = goog.style.getSize(parent);
-  var s_size = goog.style.getSize(this.sheet_);
-  var z_w = v_size.width/s_size.width*this.zoom_;
-  var z_h = v_size.height/s_size.height*this.zoom_;
+  var z_w = v_size.width/this.sheet_size_in_px_.width;
+  var z_h = v_size.height/this.sheet_size_in_px_.height;
   var z = Math.min(z_w,z_h);
   this.setZoom(z);
   var size = goog.style.getSize(this.getElement());
   parent.scrollLeft = (size.width - v_size.width)/2;
   parent.scrollTop = (size.height - v_size.height)/2;
-  this.dispatchEvent(logdx.sch.canvas.EventType.ZOOM);
 };
-
 /**
  * Resize canvas
  * @param {goog.math.Size} size of container.
  * @param {goog.math.Coordinate=} opt_diff space to pan.
  * */
 logdx.sch.canvas.prototype.resize = function(size, opt_diff) {
+  /** Save screen position*/
+  var parent = goog.dom.getParentElement(this.getElement());
+  var left = parent.scrollLeft;
+  var top = parent.scrollTop;
+  
   /** Scale sheet */
-  var s_w = this.sheetSize_.width * this.zoom_;
-  var s_h = this.sheetSize_.height * this.zoom_;
-  goog.style.setSize(this.sheet_, s_w, s_h);
+  var new_sheet_w = this.sheet_size_in_px_.width * this.zoom_level_;
+  var new_sheet_h = this.sheet_size_in_px_.height * this.zoom_level_;
+  goog.style.setSize(this.sheet_element_, new_sheet_w, new_sheet_h);
 
-  /** Get sheet area in pixel. */
-  //var s_size = goog.style.getSize(this.sheet_);
-  var w = 2 * size.width + s_w;
-  var h = 2 * size.height + s_h;
+  /** Calculate new size and position. */
+  var w = 2 * size.width + new_sheet_w;
+  var h = 2 * size.height + new_sheet_h;
 
+  var new_sheet_x = goog.math.safeCeil((w - new_sheet_w) / 2);
+  var new_sheet_y = goog.math.safeCeil((h - new_sheet_h) / 2);
+
+  goog.style.setPosition(this.sheet_element_, new_sheet_x, new_sheet_y);
   goog.style.setSize(this.getElement(), w, h);
   this.graphics.setSize(w, h);
-  var s_x = goog.math.safeCeil((w - s_w) / 2);
-  var s_y = goog.math.safeCeil((h - s_h) / 2);
 
-  var s_pos = goog.style.getPosition(this.sheet_);
-  goog.style.setPosition(this.sheet_, s_x, s_y);
 
   /** Scale graphics area. */
-  var gwz = (this.ppmm_.width*this.zoom_);
-  var ghz = (this.ppmm_.height*this.zoom_);
+  var gwz = (this.ppmm_.width*this.zoom_level_);
+  var ghz = (this.ppmm_.height*this.zoom_level_);
   this.graphics.setCoordSize(w / gwz, h / ghz);
-  this.graphics.setCoordOrigin(-s_x / gwz, -s_y / ghz);
+  this.graphics.setCoordOrigin(
+    -(new_sheet_x-0.5) / gwz, -(new_sheet_y-0.5) / ghz);
 
-  var diff = opt_diff || new goog.math.Coordinate(0, 0);
-  diff.x += s_x - s_pos.x;
-  diff.y += s_y - s_pos.y;
-  this.pan(diff.x, diff.y);  
+  var diff = opt_diff || new goog.math.Coordinate();
+  diff.x += new_sheet_x - this.sheet_pos_.x;
+  diff.y += new_sheet_y - this.sheet_pos_.y;
+  
+  /** Restore screen position */
+  parent.scrollLeft = left + diff.x;
+  parent.scrollTop = top + diff.y;
+
+  this.sheet_pos_.x = new_sheet_x;
+  this.sheet_pos_.y = new_sheet_y;
 };
 /**
  * Pan canvas
@@ -252,33 +298,16 @@ logdx.sch.canvas.prototype.resize = function(size, opt_diff) {
 logdx.sch.canvas.prototype.pan = function(dx, dy) {
   var parent = goog.dom.getParentElement(this.getElement());
   parent.scrollLeft += dx;
-  parent.scrollTop += dy;  
+  parent.scrollTop += dy;
 };
 /**
  * Move Sheet to Origin
  * */
 logdx.sch.canvas.prototype.gotoOrigin = function() {
-  var s_pos = goog.style.getPosition(this.sheet_);
   var parent = goog.dom.getParentElement(this.getElement());
-  parent.scrollLeft = s_pos.x;
-  parent.scrollTop = s_pos.y;
+  parent.scrollLeft = this.sheet_pos_.x;
+  parent.scrollTop = this.sheet_pos_.y;
 };
-/**
- * Enable pan mode
- * @param {boolean} enable
-* */
-logdx.sch.canvas.prototype.setPanMode = function(enable) {
-  this.panMode_ = enable;
-
-  if (this.panMode_) {
-     goog.dom.classes.add(this.getElement(),
-      goog.getCssName('log-canvas-move'));
-  }else {
-     goog.dom.classes.remove(this.getElement(),
-      goog.getCssName('log-canvas-move'));
-  }
-};
-
 /**
  * Creates an initial DOM representation for the component.
  */
@@ -287,9 +316,9 @@ logdx.sch.canvas.prototype.createDom = function() {
   var elem = goog.dom.createElement('div');
   goog.dom.classes.add(elem, goog.getCssName('log-canvas-background'));
   /** Create Sheet.*/
-  this.sheet_ = goog.dom.createDom('div');
-  goog.style.setStyle(this.sheet_, 'position', 'absolute');
-  goog.dom.classes.add(this.sheet_, goog.getCssName('log-canvas-sheet'));
+  this.sheet_element_ = goog.dom.createDom('div');
+  goog.style.setStyle(this.sheet_element_, 'position', 'absolute');
+  goog.dom.classes.add(this.sheet_element_, goog.getCssName('log-canvas-sheet'));
 
   /** Create graphic area.*/
   this.graphics = goog.graphics.createSimpleGraphics(0, 0);
@@ -297,7 +326,7 @@ logdx.sch.canvas.prototype.createDom = function() {
   //this.graphics.createDom();
  
   goog.style.setStyle(this.graphics.getElement(), 'position', 'absolute');
-  goog.dom.appendChild(elem, this.sheet_);
+  goog.dom.appendChild(elem, this.sheet_element_);
   this.graphics.render(elem);
 
   /** decorate it.*/
@@ -318,7 +347,6 @@ logdx.sch.canvas.prototype.decorateInternal = function(element) {
   this.kh_ = new goog.events.KeyHandler(elem);
 //this.eh_.listen(this.kh_, goog.events.KeyHandler.EventType.KEY, this.onKey_);
 };
-
 
 /** @override */
 logdx.sch.canvas.prototype.disposeInternal = function() {
@@ -354,8 +382,6 @@ logdx.sch.canvas.prototype.enterDocument = function() {
   this.eh_.listen(this.getElement(), goog.events.EventType.MOUSEUP,
     this.onMouseUp_);
 };
-
-
 /**
  * Called when component's element is known to have been removed from the
  * document.
@@ -375,9 +401,45 @@ logdx.sch.canvas.prototype.exitDocument = function() {
     this.onMouseMove_);
   this.eh_.unlisten(this.getElement(), goog.events.EventType.MOUSEUP,
     this.onMouseUp_);
-
 };
 
+
+
+/**
+ * Set the mouse position on tool.
+ * @param {logdx.sch.tool} tool Tool object.
+ * @param {goog.events.Event} event The mouse event.
+ */
+logdx.sch.canvas.prototype.setPointer = function(tool, event) {
+  var s_pos = goog.style.getClientPosition(this.sheet_element_);
+  var gwz = (this.ppmm_.width*this.zoom_level_);
+  var ghz = (this.ppmm_.height*this.zoom_level_);
+  var px_client_x = event.clientX;
+  var px_client_y = event.clientY;
+  var px_offset_x = event.clientX - s_pos.x;
+  var px_offset_y = event.clientY - s_pos.y;
+  var mm_client_x = px_client_x/gwz;
+  var mm_client_y = px_client_y/gwz;
+  var mm_offset_x = px_offset_x/gwz;
+  var mm_offset_y = px_offset_y/ghz;
+
+  if(event.type == goog.events.EventType.MOUSEDOWN){
+    tool.event.px_offset_down.x = px_offset_x;
+    tool.event.px_offset_down.y = px_offset_y;
+    tool.event.mm_offset_down.x = mm_offset_x;
+    tool.event.mm_offset_down.y = mm_offset_y;
+  }
+  
+  tool.event.px_client.x = px_client_x;
+  tool.event.px_client.y = px_client_y;
+  tool.event.px_offset.x = px_offset_x;
+  tool.event.px_offset.y = px_offset_y;
+  
+  tool.event.mm_client.x = mm_client_x;
+  tool.event.mm_client.y = mm_client_y;
+  tool.event.mm_offset.x = mm_offset_x;
+  tool.event.mm_offset.y = mm_offset_y;
+}
 /**
  * Handles DIV element mouse wheel.
  * @param {goog.events.Event} event The click event.
@@ -385,23 +447,13 @@ logdx.sch.canvas.prototype.exitDocument = function() {
 logdx.sch.canvas.prototype.handleMouseWheel = function(event) {
   event.preventDefault();
 
-  var z_last = this.zoom_;
   var step = (event.deltaY ? event.deltaY < 0 ? -0.1 : 0.1 : 0);
-  var z = Math.min(Math.max(0.01, this.zoom_ * (1 + step)),12);
+  var z = this.zoom_level_ * (1 + step);
   if (z >= 0.95 && z <= 1.05) z = 1;  
-  this.zoom_ = z;
-  
-  this.dispatchEvent(logdx.sch.canvas.EventType.ZOOM);
-  
-  /** Calculate displacement after zoom */
-  var s_pos = goog.style.getClientPosition(this.sheet_);
-  var x = Math.round((event.clientX - s_pos.x) * (this.zoom_ / z_last - 1));
-  var y = Math.round((event.clientY - s_pos.y) * (this.zoom_ / z_last - 1));
-
-  var parent = goog.dom.getParentElement(this.getElement());
-  this.resize(goog.style.getSize(parent), new goog.math.Coordinate(x, y));
+  var x = event.clientX;
+  var y = event.clientY;
+  this.setZoom(z, new goog.math.Coordinate(x, y));
 };
-
 /**
  * Handles Popup event.
  * @param {goog.events.Event} event
@@ -417,21 +469,24 @@ logdx.sch.canvas.prototype.onPopup_ = function(event) {
  */
 logdx.sch.canvas.prototype.onClicked_ = function(event) {
   event.preventDefault();
+  /*
   if (event.button == goog.events.BrowserEvent.MouseButton.LEFT &&
     !this.panMode_) {
 //    console.log('Clicked...');
-    var s_pos = goog.style.getClientPosition(this.sheet_);
+    
+    var s_pos = goog.style.getClientPosition(this.sheet_element_);
     var fill = new goog.graphics.SolidFill('red', 0.5);
     var w = 20;
     var h = 10;
-    var gwz = this.ppmm_.width * this.zoom_;
-    var ghz = this.ppmm_.height * this.zoom_;
+    var gwz = this.ppmm_.width * this.zoom_level_;
+    var ghz = this.ppmm_.height * this.zoom_level_;
     var x = (event.clientX - s_pos.x) / gwz - w / 2;
     var y = (event.clientY - s_pos.y) / ghz - h / 2;
 
     this.graphics.drawRect(x, y, w, h, null, fill);
     //this.graphics.drawRect(0, 0, 3.3333, 3.3333, null, fill);
   }
+  /**/
 };
 /**
  * Handles DIV element Mouse Down event.
@@ -440,17 +495,12 @@ logdx.sch.canvas.prototype.onClicked_ = function(event) {
  */
 logdx.sch.canvas.prototype.onMouseDown_ = function(event) {
   event.preventDefault();
-  if (event.button == goog.events.BrowserEvent.MouseButton.MIDDLE ||
-    (event.button == goog.events.BrowserEvent.MouseButton.LEFT &&
-    this.panMode_)) {
-    goog.dom.classes.add(this.getElement(),
-      goog.getCssName('log-canvas-move'));
-
-    this.mouseDownX = event.clientX;
-    this.mouseDownY = event.clientY;
-    this.mouseDragDiffX = 0;
-    this.mouseDragDiffY = 0;
-    this.panEnabled_ = true;
+  var tool = this.tools[event.button];
+  if(tool){
+    tool.event.button = event.button;
+    tool.event.mouse_down = true;
+    this.setPointer(tool, event);
+    tool.onMouseDown();
   }
 };
 /**
@@ -460,18 +510,14 @@ logdx.sch.canvas.prototype.onMouseDown_ = function(event) {
  */
 logdx.sch.canvas.prototype.onMouseMove_ = function(event) {
   event.preventDefault();
-  if (this.panEnabled_) {
-    var dXAbs = event.clientX - this.mouseDownX;
-    var dYAbs = event.clientY - this.mouseDownY;
-
-    var dX = this.mouseDragDiffX - dXAbs;
-    var dY = this.mouseDragDiffY - dYAbs;
-
-    this.pan(dX, dY);
-
-    this.mouseDragDiffX = dXAbs;
-    this.mouseDragDiffY = dYAbs;
-  }
+  goog.array.forEachRight(this.tools,function(tool, i, arr){
+    this.setPointer(tool, event);
+    if(tool.event.mouse_down){
+      tool.onMouseDrag();
+    }else{
+      tool.onMouseMove();
+    }
+  },this);
 };
 /**
  * Handles DIV element Mouse Up event.
@@ -480,10 +526,11 @@ logdx.sch.canvas.prototype.onMouseMove_ = function(event) {
  */
 logdx.sch.canvas.prototype.onMouseUp_ = function(event) {
   event.preventDefault();
-  this.panEnabled_ = false;
-  if (!this.panMode_) {
-    goog.dom.classes.remove(this.getElement(),
-      goog.getCssName('log-canvas-move'));
+  var tool = this.tools[event.button];
+  if(tool){
+    tool.event.mouse_down = false;
+    this.setPointer(tool, event);
+    tool.onMouseUp();
   }
 };
 

@@ -21,7 +21,8 @@ goog.require('goog.ui.ToolbarToggleButton');
 goog.require('goog.math');
 
 goog.require('logdx.sch.tooltip');
-
+goog.require('logdx.sch.toolselect');
+goog.require('logdx.sch.toolpan');
 
 /**
 * ToolBar Constructor.
@@ -187,7 +188,7 @@ logdx.sch.toolbar.prototype.addToolsBar = function(toolbar, sel_model) {
     var btn = e.target;
     if (!btn.isChecked()) {
       sel_model.setSelectedItem(e.target);
-      this.app.canvas.setPanMode(false);
+      this.app.canvas.setTool(new logdx.sch.toolselect());
     }
   },false, this);
   pointer_button.setCollapsed(goog.ui.ButtonSide.END);
@@ -206,12 +207,13 @@ logdx.sch.toolbar.prototype.addToolsBar = function(toolbar, sel_model) {
     var btn = e.target;
     if (!btn.isChecked()) {
       sel_model.setSelectedItem(btn);
-      this.app.canvas.setPanMode(true);
+      this.app.canvas.setTool(new logdx.sch.toolpan());
     }
   },false, this);
   move_button.setCollapsed(goog.ui.ButtonSide.START);
   toolbar.addChild(move_button, true);
   new logdx.sch.tooltip(move_button,'Pan (Space + Drag)');
+
 };
 
 /**
@@ -301,10 +303,6 @@ logdx.sch.toolbar.prototype.addZoomBar = function(toolbar, sel_model) {
   this.zoom_select_ = zoom_select;
   
   this.updateZoom(1);
-
-//  var caption = '100%';
-//  zoom_select.setValue(caption);
-//  zoom_select.setDefaultCaption(caption);
 };
 
 

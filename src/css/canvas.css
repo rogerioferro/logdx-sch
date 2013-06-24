@@ -1,6 +1,7 @@
 .log-canvas-background{
-  background : #ebebeb;
   border : 0;
+  padding : 0;
+  background : #ebebeb;
   cursor : default;
 }
 

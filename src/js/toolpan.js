@@ -11,14 +11,12 @@ goog.require('logdx.sch.tool');
 
 /**
  * Pan class
- * 
- * @param {logdx.sch.canvas} canvas Canvas object.
  *
  * @extends {logdx.sch.tool}
  * @constructor
  */
-logdx.sch.toolpan = function(canvas) {
-  logdx.sch.tool.call(this, canvas);
+logdx.sch.toolpan = function() {
+  logdx.sch.tool.call(this);
 };
 goog.inherits(logdx.sch.toolpan, logdx.sch.tool);
 
@@ -28,8 +26,8 @@ goog.inherits(logdx.sch.toolpan, logdx.sch.tool);
  * @override
  */
 logdx.sch.toolpan.prototype.onMouseDown = function() {
-  this.x = this.event.px_client.x;
-  this.y = this.event.px_client.y;
+  this.x = this.event.mm_client.x;
+  this.y = this.event.mm_client.y;
 };
 /**
  * onMouseDrag
@@ -37,11 +35,12 @@ logdx.sch.toolpan.prototype.onMouseDown = function() {
  * @override
  */
 logdx.sch.toolpan.prototype.onMouseDrag = function(){
-  var dx = this.x - this.event.px_client.x;
-  var dy = this.y - this.event.px_client.y;
+  var dx = this.event.mm_client.x - this.x;
+  var dy = this.event.mm_client.y - this.y;
   
-  this.x = this.event.px_client.x;
-  this.y = this.event.px_client.y;  
+  this.x = this.event.mm_client.x;
+  this.y = this.event.mm_client.y;  
+
   
   this.canvas.pan(dx, dy);
 };

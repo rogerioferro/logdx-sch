@@ -251,7 +251,7 @@ logdx.sch.toolbar.prototype.addZoomBar = function(toolbar, sel_model) {
     }else{
       var item = e.target.getSelectedItem();
       if(item){
-        var zoom = parseInt(item.getCaption());
+        var zoom = parseInt(item.getCaption(), 10);
         if(goog.math.isFiniteNumber(zoom)){
           this.app.canvas.setZoom(zoom/100);
         }

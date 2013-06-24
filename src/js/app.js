@@ -78,6 +78,8 @@ logdx.sch.app = function(parent) {
     this.toolbar.updateZoom(e.target.getZoom());
   },false,this);
   
+  this.canvas.fitToScreen();
+  
   this.canvas.setTool(new logdx.sch.toolselect());
   this.canvas.setTool(new logdx.sch.toolpan(),
     goog.events.BrowserEvent.MouseButton.MIDDLE);
@@ -140,8 +142,8 @@ logdx.sch.app.prototype.setupDialog = function() {
 
   goog.events.listen(dlg, goog.ui.Dialog.EventType.SELECT, function(e) {
     if( e.key == 'ok') {
-      var hppi = parseInt(hinput.value);
-      var vppi = parseInt(vinput.value);
+      var hppi = parseInt(hinput.value, 10);
+      var vppi = parseInt(vinput.value, 10);
       if(goog.math.isFiniteNumber(hppi) && goog.math.isFiniteNumber(vppi)) {
         this.ppi.width = hppi;
         this.ppi.height = vppi;

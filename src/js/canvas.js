@@ -33,11 +33,11 @@ goog.require('logdx.sch.tool.MouseEvent');
  * @param {goog.math.Size} ppi PPI size.
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper to use.
  *
- * @extends {goog.graphics.SvgGraphics}
+ * @extends {goog.ui.Component}
  * @constructor
  */
 logdx.sch.canvas = function(ppi, opt_domHelper) {
-  goog.graphics.SvgGraphics.call(this, 0, 0, 0, 0, opt_domHelper);
+  goog.ui.Component.call(this, opt_domHelper);
   
   /**
    * Mouse event parameters.
@@ -67,6 +67,13 @@ logdx.sch.canvas = function(ppi, opt_domHelper) {
    */
   this.zoom_level_ = 1;
 
+  /**
+   * Graphics object. This object is created once the
+   * component's DOM element is known.
+   *
+   * @type {goog.graphics.AbstractGraphics?}
+   */
+  this.graphics = null;
 
   /**
    * Sheet Size in mm.
@@ -98,9 +105,18 @@ logdx.sch.canvas = function(ppi, opt_domHelper) {
    * @private
    */
   this.kh_ = null;
-
+  
+  
+  /**
+   * Mouse Wheel handler for this object. This object is created once the
+   * component's DOM element is known.
+   *
+   * @type {goog.events.MouseWheelHandler?}
+   * @private
+   */
+  this.mwh_ = null;
 };
-goog.inherits(logdx.sch.canvas, goog.graphics.SvgGraphics);
+goog.inherits(logdx.sch.canvas, goog.ui.Component);
 
 
 /**
@@ -148,7 +164,7 @@ logdx.sch.canvas.prototype.setPpi = function(ppi) {
   this.ppmm_.width = this.ppi_.width/25.4;
   this.ppmm_.height = this.ppi_.height/25.4;
 
-  this.resize(goog.style.getSize(this.getElement()));
+  this.resize(goog.style.getSize(this.graphics.getElement()));
 };
 
 /**
@@ -171,11 +187,10 @@ logdx.sch.canvas.prototype.setZoom = function(zoom, opt_cursor) {
   this.zoom_level_ = zoom;
   this.dispatchEvent(logdx.sch.canvas.EventType.ZOOM);
 
-  var size = goog.style.getSize(this.getElement());
-  this.resize(size);
-    
-  var diff = opt_cursor || new goog.math.Coordinate();  
-  
+  this.resize(goog.style.getSize(this.graphics.getElement()));
+
+  var diff = opt_cursor || new goog.math.Coordinate();
+
   this.sheet_pos_.x = (this.sheet_pos_.x + diff.x) * g - diff.x;
   this.sheet_pos_.y = (this.sheet_pos_.y + diff.y) * g - diff.y;
 
@@ -185,7 +200,7 @@ logdx.sch.canvas.prototype.setZoom = function(zoom, opt_cursor) {
  * Fit to Screen
  * */
 logdx.sch.canvas.prototype.fitToScreen = function() {
-  var size = goog.style.getSize(this.getElement());
+  var size = goog.style.getSize(this.graphics.getElement());
   var w_mm = size.width / this.ppmm_.width;
   var h_mm = size.height / this.ppmm_.height;
   
@@ -211,11 +226,11 @@ logdx.sch.canvas.prototype.resize = function(size) {
   /** Set new size. */
   var w = size.width;
   var h = size.height;
-  this.setSize(w, h);
+  this.graphics.setSize(w, h);
   /** Scale graphics area. */
   var gwz = (this.ppmm_.width*this.zoom_level_);
   var ghz = (this.ppmm_.height*this.zoom_level_);
-  this.setCoordSize(w / gwz, h / ghz);
+  this.graphics.setCoordSize(w / gwz, h / ghz);
   this.pan(0,0);
   
   var stroke = new goog.graphics.Stroke('1px','#d4d4d4');
@@ -235,21 +250,27 @@ logdx.sch.canvas.prototype.pan = function(dx, dy) {
   var ddx = 0.5/gwz;
   var ddy = 0.5/ghz;
 
-  this.setCoordOrigin(-this.sheet_pos_.x - ddx, -this.sheet_pos_.y - ddy);
+  this.graphics.setCoordOrigin(-this.sheet_pos_.x - ddx, -this.sheet_pos_.y - ddy);
 };
 /**
  * Creates an initial DOM representation for the component.
  */
 logdx.sch.canvas.prototype.createDom = function() {
-  logdx.sch.canvas.superClass_.createDom.apply(this,arguments);
+  
+  /** Create background.*/
+  var elem = goog.dom.createElement('div');
+  goog.dom.classes.add(elem, goog.getCssName('log-canvas-background'));
+  
+  this.graphics = new goog.graphics.SvgGraphics(0, 0);
+  this.graphics.createDom();
+  this.graphics.render(elem);
+
   
   /** Create sheet.*/
   var fill = new goog.graphics.SolidFill('white');
-  this.sheet = this.drawRect(0, 0, this.sheet_size_in_mm_.width, this.sheet_size_in_mm_.height, null, fill);
+  this.sheet = this.graphics.drawRect(0, 0, 
+    this.sheet_size_in_mm_.width, this.sheet_size_in_mm_.height, null, fill);
   
-
-  var elem = this.getElement();
-
   /** decorate it.*/
   this.decorateInternal(elem);
 };
@@ -261,12 +282,10 @@ logdx.sch.canvas.prototype.createDom = function() {
  * @param {Element} element The DIV element to decorate.
  */
 logdx.sch.canvas.prototype.decorateInternal = function(element) {
+  //logdx.sch.canvas.superClass_.decorateInternal.call(this, element);
   this.setElementInternal(element);
   var elem = this.getElement();
   elem.tabIndex = 0;  
-
-  this.kh_ = new goog.events.KeyHandler(elem);
-//this.eh_.listen(this.kh_, goog.events.KeyHandler.EventType.KEY, this.onKey_);
 };
 
 /** @override */
@@ -274,6 +293,9 @@ logdx.sch.canvas.prototype.disposeInternal = function() {
   this.eh_.dispose();
   if (this.kh_) {
     this.kh_.dispose();
+  }
+  if (this.mwh_) {
+    this.mwh_.dispose();
   }
   goog.base(this, 'disposeInternal');
 };
@@ -288,10 +310,11 @@ logdx.sch.canvas.prototype.enterDocument = function() {
   var parent = goog.dom.getParentElement(this.getElement());
   goog.style.setStyle(parent, 'overflow', 'hidden');
 
-  /** @type {goog.events.MouseWheelHandler}*/
-  this.mwh = new goog.events.MouseWheelHandler(this.getElement());
-  this.eh_.listen(this.mwh, goog.events.MouseWheelHandler.EventType.MOUSEWHEEL,
+  this.mwh_ = new goog.events.MouseWheelHandler(this.getElement());
+  this.eh_.listen(this.mwh_,
+    goog.events.MouseWheelHandler.EventType.MOUSEWHEEL,
     this.handleMouseWheel);
+    
   this.eh_.listen(this.getElement(), goog.events.EventType.CONTEXTMENU,
     this.onPopup_);
   this.eh_.listen(this.getElement(), goog.events.EventType.CLICK,
@@ -302,6 +325,18 @@ logdx.sch.canvas.prototype.enterDocument = function() {
     this.onMouseMove_);
   this.eh_.listen(this.getElement(), goog.events.EventType.MOUSEUP,
     this.onMouseUp_);
+
+//  this.eh_.listen(goog.dom.getDocument(), goog.events.EventType.KEYDOWN,
+//    this.onKey_);
+
+//  this.eh_.listen(goog.dom.getDocument(), goog.events.EventType.KEYUP,
+//    this.onKey_);
+
+//  this.kh_ = new goog.events.KeyHandler(this.getElement());
+//  this.kh_ = new goog.events.KeyHandler(goog.dom.getDocument());
+//  this.eh_.listen(this.kh_, goog.events.KeyHandler.EventType.KEY, 
+//    this.onKey_);
+
 };
 /**
  * Called when component's element is known to have been removed from the
@@ -310,8 +345,10 @@ logdx.sch.canvas.prototype.enterDocument = function() {
 logdx.sch.canvas.prototype.exitDocument = function() {
   goog.base(this, 'exitDocument');
 
-  this.eh_.unlisten(this.mwh,
-    goog.events.MouseWheelHandler.EventType.MOUSEWHEEL, this.handleMouseWheel);
+  this.eh_.unlisten(this.mwh_,
+    goog.events.MouseWheelHandler.EventType.MOUSEWHEEL, 
+    this.handleMouseWheel);
+    
   this.eh_.unlisten(this.getElement(), goog.events.EventType.CONTEXTMENU,
     this.onPopup_);
   this.eh_.unlisten(this.getElement(), goog.events.EventType.CLICK,
@@ -322,8 +359,10 @@ logdx.sch.canvas.prototype.exitDocument = function() {
     this.onMouseMove_);
   this.eh_.unlisten(this.getElement(), goog.events.EventType.MOUSEUP,
     this.onMouseUp_);
-};
 
+//  this.eh_.unlisten(this.kh_, goog.events.KeyHandler.EventType.KEY,
+//    this.onKey_);
+};
 
 
 /**
@@ -332,17 +371,17 @@ logdx.sch.canvas.prototype.exitDocument = function() {
  * @param {goog.events.Event} event The mouse event.
  */
 logdx.sch.canvas.prototype.setPointer = function(tool, event) {
-  var s_pos = goog.style.getClientPosition(this.getElement());
+  var s_pos = goog.style.getClientPosition(this.graphics.getElement());
   var gwz = (this.ppmm_.width*this.zoom_level_);
   var ghz = (this.ppmm_.height*this.zoom_level_);
   var px_client_x = event.clientX;
   var px_client_y = event.clientY;
-  var px_offset_x = event.clientX - s_pos.x;
-  var px_offset_y = event.clientY - s_pos.y;
+  var px_offset_x = event.clientX - s_pos.x - this.sheet_pos_.x * gwz;
+  var px_offset_y = event.clientY - s_pos.y - this.sheet_pos_.y * ghz;
   var mm_client_x = px_client_x/gwz;
   var mm_client_y = px_client_y/gwz;
-  var mm_offset_x = px_offset_x/gwz - this.sheet_pos_.x;
-  var mm_offset_y = px_offset_y/ghz - this.sheet_pos_.y;
+  var mm_offset_x = (event.clientX - s_pos.x)/gwz - this.sheet_pos_.x;
+  var mm_offset_y = (event.clientY - s_pos.y)/ghz - this.sheet_pos_.y;
     
 
   if(event.type == goog.events.EventType.MOUSEDOWN){
@@ -376,25 +415,11 @@ logdx.sch.canvas.prototype.setPointer = function(tool, event) {
  
 logdx.sch.canvas.prototype.handleMouseWheel = function(event) {
   event.preventDefault();
-
-  var s_pos = goog.style.getClientPosition(this.getElement());
-  var gwz = (this.ppmm_.width*this.zoom_level_);
-  var ghz = (this.ppmm_.height*this.zoom_level_);
-  var px_client_x = event.clientX;
-  var px_client_y = event.clientY;
-  var px_offset_x = event.clientX - s_pos.x;
-  var px_offset_y = event.clientY - s_pos.y;
-  var mm_client_x = px_client_x/gwz;
-  var mm_client_y = px_client_y/gwz;
-  var mm_offset_x = px_offset_x/gwz - this.sheet_pos_.x;
-  var mm_offset_y = px_offset_y/ghz - this.sheet_pos_.y;
-
-
-  var step = (event.deltaY ? event.deltaY < 0 ? -0.1 : 0.1 : 0);
-  var z = this.zoom_level_ * (1 + step);
-  if (z >= 0.95 && z <= 1.05) z = 1;  
-
-  this.setZoom(z, new goog.math.Coordinate(mm_offset_x, mm_offset_y));
+  var tool = this.tools[goog.events.BrowserEvent.MouseButton.MIDDLE];
+  if(tool){
+    this.setPointer(tool, event);
+    tool.onMouseWheel(goog.math.sign(event.deltaY));
+  }
 };
 /**
  * Handles Popup event.
@@ -411,7 +436,7 @@ logdx.sch.canvas.prototype.onPopup_ = function(event) {
  */
 logdx.sch.canvas.prototype.onClicked_ = function(event) {
   event.preventDefault();
-  /**/
+  /*
   if (event.button == goog.events.BrowserEvent.MouseButton.LEFT) {
 //    console.log('Clicked...');
     
@@ -477,14 +502,17 @@ logdx.sch.canvas.prototype.onMouseUp_ = function(event) {
 };
 
 
-// /**
-// * Fired when user presses a key while the DIV has focus.
-// * @param {goog.events.Event} event The key event.
-// * @private
-// */
-//logdx.sch.canvas.prototype.onKey_ = function(event) {
-//  var keyCodes = goog.events.KeyCodes;
-//  if (event.keyCode == keyCodes.SPACE || event.keyCode == keyCodes.ENTER) {
-//    console.log('key pressed...');
-//  }
-//};
+/**
+ * Fired when user presses a key while the DIV has focus.
+ * @param {goog.events.Event} event The key event.
+ * @private
+ */
+logdx.sch.canvas.prototype.onKey_ = function(event) {
+  console.log('key...');
+  var keyCodes = goog.events.KeyCodes;
+  if (event.keyCode == keyCodes.SPACE || event.keyCode == keyCodes.ENTER) {
+    console.log('key pressed...');
+    goog.dom.classes.add(this.getElement(),
+      goog.getCssName('log-canvas-move'));
+  }
+};

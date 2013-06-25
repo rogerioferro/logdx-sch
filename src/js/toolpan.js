@@ -21,6 +21,19 @@ logdx.sch.toolpan = function() {
 goog.inherits(logdx.sch.toolpan, logdx.sch.tool);
 
 /**
+ * onMouseWheel
+ * @param {number} step Mouse Wheel Step
+ * 
+ * @override
+ */
+logdx.sch.toolpan.prototype.onMouseWheel = function(step){
+  var z = this.canvas.getZoom() * (1 + step * 0.1);
+  if (z >= 0.95 && z <= 1.05) z = 1;  
+
+  this.canvas.setZoom(z, this.event.mm_offset);
+
+};
+/**
  * onMouseDown
  * 
  * @override
@@ -40,7 +53,6 @@ logdx.sch.toolpan.prototype.onMouseDrag = function(){
   
   this.x = this.event.mm_client.x;
   this.y = this.event.mm_client.y;  
-
   
   this.canvas.pan(dx, dy);
 };

@@ -38,6 +38,13 @@ logdx.sch.tool = function() {
 logdx.sch.tool.prototype.setCanvas = function(canvas) {
   this.canvas = canvas;
 };
+
+/**
+ * onMouseWheel
+ * @param {number} step Mouse Wheel Step
+ */
+logdx.sch.tool.prototype.onMouseWheel = function(step){
+};
 /**
  * onMouseMove
  */

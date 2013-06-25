@@ -85,7 +85,6 @@ logdx.sch.app = function(parent) {
     goog.events.BrowserEvent.MouseButton.MIDDLE);
   
   //console.log('x:'+this.dpi.width+';y:'+this.dpi.height);
-  
 };
 
 /**

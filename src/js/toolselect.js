@@ -26,11 +26,12 @@ goog.inherits(logdx.sch.toolselect, logdx.sch.tool);
  * @override
  */
 logdx.sch.toolselect.prototype.onMouseDown = function() {
+  
   this.onMouseUp();
   this.zoom = this.canvas.getZoom();
   var stroke = new goog.graphics.Stroke(0.2/this.zoom, 'rgba(128,0,128,0.8)');
   var fill = new goog.graphics.SolidFill('#800080', 0.2);
-  this.shape = this.canvas.drawRect(
+  this.shape = this.canvas.graphics.drawRect(
     this.event.mm_offset.x, this.event.mm_offset.y, 0, 0, stroke, fill);
 };
 /**
@@ -58,7 +59,7 @@ logdx.sch.toolselect.prototype.onMouseDrag = function(){
  */
 logdx.sch.toolselect.prototype.onMouseUp = function(){
   if(this.shape){
-    this.canvas.removeElement(this.shape);
+    this.canvas.graphics.removeElement(this.shape);
     this.shape.dispose();
     this.shape = null;
   }

@@ -200,14 +200,14 @@ logdx.sch.toolbar.prototype.addToolsBar = function(toolbar, sel_model) {
    * @type {goog.ui.ToolbarToggleButton}
    */
   var move_button = new goog.ui.ToolbarToggleButton(
-    this.newIcon(goog.getCssName('goog-icon-move')));
+    this.newIcon(goog.getCssName('goog-icon-grab')));
   move_button.setAutoStates(goog.ui.Component.State.CHECKED, false);
   sel_model.addItem(move_button);
   move_button.listen(goog.ui.Component.EventType.ACTION, function(e) {
     var btn = e.target;
     if (!btn.isChecked()) {
       sel_model.setSelectedItem(btn);
-      this.app.canvas.setTool(new logdx.sch.toolpan());
+      this.app.canvas.setTool(new logdx.sch.toolpan(true));
     }
   },false, this);
   move_button.setCollapsed(goog.ui.ButtonSide.START);

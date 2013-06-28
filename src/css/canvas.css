@@ -2,14 +2,21 @@
   border : 0;
   padding : 0;
   background : #ebebeb;
-  cursor : default;
 }
 
-.log-canvas-move {
-  cursor : move;
+
+.log-cursor-pointer {
+  cursor : url('../img/icn_cursor_pointer.cur'), crosshair;
 }
 
-.log-canvas-sheet{
-  background : #fff;
-  border: 1px solid #d4d4d4;
+.log-cursor-move {
+  cursor : url('../img/icn_cursor_move.cur'), move;
+}
+
+.log-cursor-grab {
+  cursor : url('../img/icn_cursor_grab.cur'), move;
+}
+
+.log-cursor-grabbing {
+  cursor : url('../img/icn_cursor_grabbing.cur'), move !important;
 }

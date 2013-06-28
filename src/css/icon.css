@@ -137,3 +137,8 @@
 .goog-icon-caret-right {
   background-position: -144px -16px;
 } 
+
+/* Grab. */
+.goog-icon-grab {
+  background-position: 0 -32px;
+}

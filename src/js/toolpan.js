@@ -11,14 +11,43 @@ goog.require('logdx.sch.tool');
 
 /**
  * Pan class
+ * 
+ * @param {boolean=} opt_use_cursor Change canvas cursor.
  *
  * @extends {logdx.sch.tool}
  * @constructor
  */
-logdx.sch.toolpan = function() {
+logdx.sch.toolpan = function(opt_use_cursor) {
   logdx.sch.tool.call(this);
+  this.use_cursor = !!opt_use_cursor;
 };
 goog.inherits(logdx.sch.toolpan, logdx.sch.tool);
+
+/**
+ * setCanvas
+ * 
+ * @param {logdx.sch.canvas} canvas Canvas object.
+ * 
+ * @override
+ */
+logdx.sch.toolpan.prototype.setCanvas = function(canvas) {
+  logdx.sch.toolpan.superClass_.setCanvas.call(this, canvas);
+  if(this.use_cursor){
+    goog.dom.classes.add(this.canvas.getElement(),
+      goog.getCssName('log-cursor-grab'));
+  }
+};
+
+/**
+ * dispose
+ * @override
+ */
+logdx.sch.toolpan.prototype.dispose = function() {
+  goog.dom.classes.remove(this.canvas.getElement(),
+    goog.getCssName('log-cursor-grab'));
+  goog.dom.classes.remove(this.canvas.getElement(),
+    goog.getCssName('log-cursor-grabbing'));
+};
 
 /**
  * onMouseWheel
@@ -41,6 +70,8 @@ logdx.sch.toolpan.prototype.onMouseWheel = function(step){
 logdx.sch.toolpan.prototype.onMouseDown = function() {
   this.x = this.event.mm_client.x;
   this.y = this.event.mm_client.y;
+    goog.dom.classes.add(this.canvas.getElement(),
+      goog.getCssName('log-cursor-grabbing'));
 };
 /**
  * onMouseDrag
@@ -56,3 +87,12 @@ logdx.sch.toolpan.prototype.onMouseDrag = function(){
   
   this.canvas.pan(dx, dy);
 };
+/**
+ * onMouseUp
+ * 
+ * @override
+ */
+logdx.sch.toolpan.prototype.onMouseUp = function(){
+    goog.dom.classes.remove(this.canvas.getElement(),
+      goog.getCssName('log-cursor-grabbing'));
+}

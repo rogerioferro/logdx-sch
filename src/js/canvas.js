@@ -136,6 +136,9 @@ logdx.sch.canvas.EventType = {
 logdx.sch.canvas.prototype.setTool = function(tool, opt_button) {
   var button = opt_button || goog.events.BrowserEvent.MouseButton.LEFT;
   tool.setCanvas(this);
+  if(this.tools[button]){
+    this.tools[button].dispose();
+  }
   this.tools[button] = tool;
 };
 
@@ -220,7 +223,6 @@ logdx.sch.canvas.prototype.fitToScreen = function() {
 /**
  * Resize canvas
  * @param {goog.math.Size} size of container.
- * @param {goog.math.Coordinate=} opt_diff space to pan.
  * */
 logdx.sch.canvas.prototype.resize = function(size) {
   /** Set new size. */

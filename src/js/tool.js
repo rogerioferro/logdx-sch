@@ -30,6 +30,13 @@ logdx.sch.tool = function() {
   this.event = new logdx.sch.tool.MouseEvent();
   
 };
+
+/**
+ * dispose
+ */
+logdx.sch.tool.prototype.dispose = function() {
+};
+
 /**
  * setCanvas
  * 

@@ -5,13 +5,13 @@
  */
 
 goog.provide('logdx.sch.toolpan');
- 
-goog.require('logdx.sch.tool'); 
+
+goog.require('logdx.sch.tool');
 
 
 /**
  * Pan class
- * 
+ *
  * @param {boolean=} opt_use_cursor Change canvas cursor.
  *
  * @extends {logdx.sch.tool}
@@ -25,14 +25,14 @@ goog.inherits(logdx.sch.toolpan, logdx.sch.tool);
 
 /**
  * setCanvas
- * 
+ *
  * @param {logdx.sch.canvas} canvas Canvas object.
- * 
+ *
  * @override
  */
 logdx.sch.toolpan.prototype.setCanvas = function(canvas) {
   logdx.sch.toolpan.superClass_.setCanvas.call(this, canvas);
-  if(this.use_cursor){
+  if (this.use_cursor) {
     goog.dom.classes.add(this.canvas.getElement(),
       goog.getCssName('log-cursor-grab'));
   }
@@ -51,20 +51,20 @@ logdx.sch.toolpan.prototype.dispose = function() {
 
 /**
  * onMouseWheel
- * @param {number} step Mouse Wheel Step
- * 
+ * @param {number} step Mouse Wheel Step.
+ *
  * @override
  */
-logdx.sch.toolpan.prototype.onMouseWheel = function(step){
+logdx.sch.toolpan.prototype.onMouseWheel = function(step) {
   var z = this.canvas.getZoom() * (1 + step * 0.1);
-  if (z >= 0.95 && z <= 1.05) z = 1;  
+  if (z >= 0.95 && z <= 1.05) z = 1;
 
   this.canvas.setZoom(z, this.event.mm_offset);
 
 };
 /**
  * onMouseDown
- * 
+ *
  * @override
  */
 logdx.sch.toolpan.prototype.onMouseDown = function() {
@@ -75,24 +75,24 @@ logdx.sch.toolpan.prototype.onMouseDown = function() {
 };
 /**
  * onMouseDrag
- * 
+ *
  * @override
  */
-logdx.sch.toolpan.prototype.onMouseDrag = function(){
+logdx.sch.toolpan.prototype.onMouseDrag = function() {
   var dx = this.event.mm_client.x - this.x;
   var dy = this.event.mm_client.y - this.y;
-  
+
   this.x = this.event.mm_client.x;
-  this.y = this.event.mm_client.y;  
-  
+  this.y = this.event.mm_client.y;
+
   this.canvas.pan(dx, dy);
 };
 /**
  * onMouseUp
- * 
+ *
  * @override
  */
-logdx.sch.toolpan.prototype.onMouseUp = function(){
+logdx.sch.toolpan.prototype.onMouseUp = function() {
     goog.dom.classes.remove(this.canvas.getElement(),
       goog.getCssName('log-cursor-grabbing'));
-}
+};

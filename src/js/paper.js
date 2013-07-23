@@ -8,7 +8,7 @@ goog.provide('logdx.sch.sheet.size');
  * @param {logdx.sch.sheet.orientation} orientation Paper orientation.
  * @param {number=} opt_width If size == CUSTOM needs width.
  * @param {number=} opt_height If size == CUSTOM needs height.
- * 
+ *
  * @constructor
  */
 logdx.sch.paper = function(size, orientation, opt_width, opt_height) {

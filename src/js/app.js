@@ -3,23 +3,20 @@ goog.provide('logdx.sch.app');
 goog.require('goog.dom');
 goog.require('goog.dom.ViewportSizeMonitor');
 goog.require('goog.events');
-goog.require('goog.style');
-goog.require('goog.ui.SplitPane');
-
 goog.require('goog.events.EventType');
-goog.require('goog.ui.Dialog');
+goog.require('goog.style');
 goog.require('goog.ui.Button');
-
+goog.require('goog.ui.Dialog');
+goog.require('goog.ui.SplitPane');
 goog.require('logdx.sch.canvas');
 goog.require('logdx.sch.canvas.EventType');
+goog.require('logdx.sch.figure');
 goog.require('logdx.sch.paper');
 goog.require('logdx.sch.sheet.orientation');
 goog.require('logdx.sch.sheet.size');
 goog.require('logdx.sch.toolbar');
-
-goog.require('logdx.sch.toolselect');
 goog.require('logdx.sch.toolpan');
-
+goog.require('logdx.sch.toolselect');
 
 /**
  * App Constructor.
@@ -33,7 +30,7 @@ logdx.sch.app = function(parent) {
   /** @type {goog.math.Size} */
   this.ppi = this.getMonitorPpi();
   //this.ppi = new goog.math.Size(110.27,110.27);
-  
+
   this.toolbar = new logdx.sch.toolbar(parent, this);
   /**
    * The paper properties.
@@ -73,17 +70,22 @@ logdx.sch.app = function(parent) {
   };
   goog.events.listen(vsm, goog.events.EventType.RESIZE, content_resize);
   content_resize();
-  
-  this.canvas.listen(logdx.sch.canvas.EventType.ZOOM, function(e){
+
+  this.canvas.listen(logdx.sch.canvas.EventType.ZOOM, function(e) {
     this.toolbar.updateZoom(e.target.getZoom());
-  },false,this);
-  
+  },false, this);
+
   this.canvas.fitToScreen();
-  
+
   this.canvas.setTool(new logdx.sch.toolselect());
   this.canvas.setTool(new logdx.sch.toolpan(),
     goog.events.BrowserEvent.MouseButton.MIDDLE);
-  
+
+  var fig1 = new logdx.sch.figure();
+  var fig2 = new logdx.sch.figure();
+  this.canvas.addFigure(fig1);
+  this.canvas.addFigure(fig2);
+
   //console.log('x:'+this.dpi.width+';y:'+this.dpi.height);
 };
 
@@ -91,40 +93,40 @@ logdx.sch.app = function(parent) {
  * Setup Dialog.
  */
 logdx.sch.app.prototype.setupDialog = function() {
-  
+
   var hp = goog.dom.createDom('p');
-  var hlabel =  goog.dom.createDom('label',{'for':'hppi'});
-  goog.dom.setTextContent(hlabel,'Horizontal PPI:');
+  var hlabel = goog.dom.createDom('label', {'for': 'hppi'});
+  goog.dom.setTextContent(hlabel, 'Horizontal PPI:');
   var hinput = goog.dom.createDom('input',
-              {'name' : 'ppi','id':'hppi',
+              {'name' : 'ppi', 'id': 'hppi',
                'type' : 'number',
                'size': 5,
                'min' : 0,
                'max' : 1000});
-  goog.dom.appendChild(hp,hlabel);
-  goog.dom.appendChild(hp,hinput);
-  
+  goog.dom.appendChild(hp, hlabel);
+  goog.dom.appendChild(hp, hinput);
+
   var vp = goog.dom.createDom('p');
-  var vlabel =  goog.dom.createDom('label',{'for':'vppi'});
-  goog.dom.setTextContent(vlabel,'Vertical PPI:');
+  var vlabel = goog.dom.createDom('label', {'for': 'vppi'});
+  goog.dom.setTextContent(vlabel, 'Vertical PPI:');
   var vinput = goog.dom.createDom('input',
-              {'name' : 'ppi','id':'vppi',
+              {'name' : 'ppi', 'id': 'vppi',
                'type' : 'number',
                'size': 5,
                'min' : 0,
                'max' : 1000});
-  goog.dom.appendChild(vp,vlabel);
-  goog.dom.appendChild(vp,vinput);
+  goog.dom.appendChild(vp, vlabel);
+  goog.dom.appendChild(vp, vinput);
 
   var div = goog.dom.createDom('div');
-  goog.dom.appendChild(div,hp);
-  goog.dom.appendChild(div,vp);
-  
+  goog.dom.appendChild(div, hp);
+  goog.dom.appendChild(div, vp);
+
   var button = new goog.ui.Button('Detect PPI');
-    
+
   var dlg = new goog.ui.Dialog();
-  goog.dom.appendChild(dlg.getContentElement(),div);
-  dlg.addChild(button,true);
+  goog.dom.appendChild(dlg.getContentElement(), div);
+  dlg.addChild(button, true);
   dlg.setTitle('Setup');
   dlg.setButtonSet(goog.ui.Dialog.ButtonSet.OK_CANCEL);
   dlg.setVisible(true);
@@ -136,21 +138,21 @@ logdx.sch.app.prototype.setupDialog = function() {
     var size = this.getMonitorPpi();
     hinput.value = size.width;
     vinput.value = size.height;
-  },false,this);
+  },false, this);
 
 
   goog.events.listen(dlg, goog.ui.Dialog.EventType.SELECT, function(e) {
-    if( e.key == 'ok') {
+    if (e.key == 'ok') {
       var hppi = parseInt(hinput.value, 10);
       var vppi = parseInt(vinput.value, 10);
-      if(goog.math.isFiniteNumber(hppi) && goog.math.isFiniteNumber(vppi)) {
+      if (goog.math.isFiniteNumber(hppi) && goog.math.isFiniteNumber(vppi)) {
         this.ppi.width = hppi;
         this.ppi.height = vppi;
         this.canvas.setPpi(this.ppi);
       }
     }
     dlg.dispose();
-  },false,this);
+  },false, this);
 };
 
 /**
@@ -167,4 +169,4 @@ logdx.sch.app.prototype.getMonitorPpi = function() {
   size.height /= 1000;
   goog.dom.removeNode(element);
   return size;
-}
+};

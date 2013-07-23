@@ -3,6 +3,7 @@ goog.provide('logdx.sch.toolbar');
 goog.require('goog.dom');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
+goog.require('goog.math');
 goog.require('goog.style');
 goog.require('goog.ui.Button');
 goog.require('goog.ui.Component.EventType');
@@ -18,11 +19,9 @@ goog.require('goog.ui.ToolbarRenderer');
 goog.require('goog.ui.ToolbarSelect');
 goog.require('goog.ui.ToolbarSeparator');
 goog.require('goog.ui.ToolbarToggleButton');
-goog.require('goog.math');
-
-goog.require('logdx.sch.tooltip');
-goog.require('logdx.sch.toolselect');
 goog.require('logdx.sch.toolpan');
+goog.require('logdx.sch.toolselect');
+goog.require('logdx.sch.tooltip');
 
 /**
 * ToolBar Constructor.
@@ -67,7 +66,7 @@ logdx.sch.toolbar = function(parent, app) {
 
   this.addToolsBar(toolbar, sel_model);
   this.addZoomBar(toolbar, sel_model);
-  
+
   toolbar.render(this.parent);
 };
 
@@ -78,7 +77,7 @@ logdx.sch.toolbar = function(parent, app) {
  */
 logdx.sch.toolbar.prototype.updateZoom = function(zoom) {
   var z = zoom * 100;
-  var caption = ((z<1000)?z.toPrecision(3):z.toFixed(0)) + '%';
+  var caption = ((z < 1000) ? z.toPrecision(3) : z.toFixed(0)) + '%';
   this.zoom_select_.setValue(caption);
   this.zoom_select_.setDefaultCaption(caption);
 };
@@ -104,9 +103,9 @@ logdx.sch.toolbar.prototype.addMenuBar = function(toolbar) {
   file_menu.addChild(new goog.ui.MenuSeparator(), true);
   var setup_item = this.addMenuItem(file_menu, 'Setup...');
 
-  setup_item.listen(goog.ui.Component.EventType.ACTION, function(e){
+  setup_item.listen(goog.ui.Component.EventType.ACTION, function(e) {
     this.app.setupDialog();
-  },false,this);
+  },false, this);
 
   /**
    * Edit Menu
@@ -156,8 +155,8 @@ logdx.sch.toolbar.prototype.addEditBar = function(toolbar) {
     this.newIcon(goog.getCssName('goog-icon-undo')));
   undo_button.setCollapsed(goog.ui.ButtonSide.END);
   toolbar.addChild(undo_button, true);
-  new logdx.sch.tooltip(undo_button,'Undo (Ctrl+Z)');
-  
+  new logdx.sch.tooltip(undo_button, 'Undo (Ctrl+Z)');
+
   /**
    * Redo Button
    * @type {goog.ui.ToolbarButton}
@@ -166,7 +165,7 @@ logdx.sch.toolbar.prototype.addEditBar = function(toolbar) {
     this.newIcon(goog.getCssName('goog-icon-redo')));
   redo_button.setCollapsed(goog.ui.ButtonSide.START);
   toolbar.addChild(redo_button, true);
-  new logdx.sch.tooltip(redo_button,'Redo (Ctrl+Y)');
+  new logdx.sch.tooltip(redo_button, 'Redo (Ctrl+Y)');
 };
 
 /**
@@ -193,7 +192,7 @@ logdx.sch.toolbar.prototype.addToolsBar = function(toolbar, sel_model) {
   },false, this);
   pointer_button.setCollapsed(goog.ui.ButtonSide.END);
   toolbar.addChild(pointer_button, true);
-  new logdx.sch.tooltip(pointer_button,'Pointer (Esc)');
+  new logdx.sch.tooltip(pointer_button, 'Pointer (Esc)');
 
   /**
    * Move Button
@@ -212,7 +211,7 @@ logdx.sch.toolbar.prototype.addToolsBar = function(toolbar, sel_model) {
   },false, this);
   move_button.setCollapsed(goog.ui.ButtonSide.START);
   toolbar.addChild(move_button, true);
-  new logdx.sch.tooltip(move_button,'Pan (Space + Drag)');
+  new logdx.sch.tooltip(move_button, 'Pan (Space + Drag)');
 
 };
 
@@ -227,13 +226,13 @@ logdx.sch.toolbar.prototype.addZoomBar = function(toolbar, sel_model) {
    * @type {goog.ui.Menu}
    */
   var zoom_menu = new goog.ui.Menu();
-  var z = ['400%','300%','200%','150%','100%','75%','50%','25%'];
-  for(var i=0; i < z.length; i++ ){
+  var z = ['400%', '300%', '200%', '150%', '100%', '75%', '50%', '25%'];
+  for (var i = 0; i < z.length; i++) {
     zoom_menu.addChild(new goog.ui.MenuItem(z[i]), true);
   }
   zoom_menu.addChild(new goog.ui.MenuSeparator(), true);
   zoom_menu.addChild(new goog.ui.MenuItem('Fit To Screen'), true);
-  
+
   /**
    * Zoom Select
    * @type {goog.ui.ToolbarSelect}
@@ -241,23 +240,23 @@ logdx.sch.toolbar.prototype.addZoomBar = function(toolbar, sel_model) {
   var zoom_select = new goog.ui.ToolbarSelect('zoom', zoom_menu);
   zoom_select.setCollapsed(goog.ui.ButtonSide.END);
   toolbar.addChild(zoom_select, true);
-  
-  zoom_select.listen(goog.ui.Component.EventType.CHANGE, function(e){
-    if(!this.app.canvas) return;
+
+  zoom_select.listen(goog.ui.Component.EventType.CHANGE, function(e) {
+    if (!this.app.canvas) return;
     var last = e.target.getItemCount() - 1;
-    if(e.target.getSelectedIndex() == last){
+    if (e.target.getSelectedIndex() == last) {
       //console.log('Fit...');
       this.app.canvas.fitToScreen();
-    }else{
+    }else {
       var item = e.target.getSelectedItem();
-      if(item){
+      if (item) {
         var zoom = parseInt(item.getCaption(), 10);
-        if(goog.math.isFiniteNumber(zoom)){
-          this.app.canvas.setZoom(zoom/100);
+        if (goog.math.isFiniteNumber(zoom)) {
+          this.app.canvas.setZoom(zoom / 100);
         }
       }
     }
-  },false,this);
+  },false, this);
 
   /**
    * Zoom In Button
@@ -276,7 +275,7 @@ logdx.sch.toolbar.prototype.addZoomBar = function(toolbar, sel_model) {
   zoom_in_button.setCollapsed(
     goog.ui.ButtonSide.END | goog.ui.ButtonSide.START);
   toolbar.addChild(zoom_in_button, true);
-  new logdx.sch.tooltip(zoom_in_button,'Zoom In (Ctrl++)');
+  new logdx.sch.tooltip(zoom_in_button, 'Zoom In (Ctrl++)');
 
   /**
    * Zoom Out Button
@@ -294,14 +293,14 @@ logdx.sch.toolbar.prototype.addZoomBar = function(toolbar, sel_model) {
   },false, this);
   zoom_out_button.setCollapsed(goog.ui.ButtonSide.START);
   toolbar.addChild(zoom_out_button, true);
-  new logdx.sch.tooltip(zoom_out_button,'Zoom Out (Ctrl+-)');
+  new logdx.sch.tooltip(zoom_out_button, 'Zoom Out (Ctrl+-)');
 
   /**
    * Zoom Select
    * @type {goog.ui.ToolbarSelect}
    */
   this.zoom_select_ = zoom_select;
-  
+
   this.updateZoom(1);
 };
 

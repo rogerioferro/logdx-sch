@@ -11,9 +11,9 @@ goog.require('goog.dom.classes');
 goog.require('goog.events');
 goog.require('goog.events.EventHandler');
 goog.require('goog.events.EventType');
+goog.require('goog.positioning.AnchoredPosition');
 goog.require('goog.style');
 goog.require('goog.ui.Component');
-goog.require('goog.positioning.AnchoredPosition');
 
 
 /**
@@ -35,12 +35,12 @@ logdx.sch.tooltip = function(component, opt_text, opt_domHelper) {
    * @private
    */
   this.component_ = component;
-  
+
   this.component_.listen(goog.ui.Component.EventType.HIGHLIGHT,
     this.onHighlight_, false, this);
   this.component_.listen(goog.ui.Component.EventType.UNHIGHLIGHT,
     this.onUnhighlight_, false, this);
-  
+
   this.text_ = opt_text || '';
 };
 goog.inherits(logdx.sch.tooltip, goog.ui.Component);
@@ -88,21 +88,21 @@ logdx.sch.tooltip.prototype.hideTimer;
  * @param {boolean} visible Desired visibility state.
  */
 logdx.sch.tooltip.prototype.setVisible = function(visible) {
-  if(!this.getElement()){
+  if (!this.getElement()) {
     var elem = goog.dom.getElementByClass(goog.getCssName('log-tooltip'));
-    if(elem){
+    if (elem) {
       this.decorateInternal(elem);
-    }else{
+    }else {
       this.render();
     }
   }
-  if(visible) {
+  if (visible) {
     this.setText(this.text_);
     this.setPosition();
     goog.style.setElementShown(this.getElement(), true);
   }
   var isVisible = goog.style.isElementShown(this.getElement());
-  if(!visible && isVisible){
+  if (!visible && isVisible) {
     goog.style.setElementShown(this.getElement(), false);
   }
 };
@@ -115,13 +115,13 @@ logdx.sch.tooltip.prototype.setPosition = function() {
   var anchor_elem = this.component_.getElement();
   var elem = this.getElement();
   var anchor_size = goog.style.getSize(anchor_elem);
-  var size = goog.style.getSize(elem); 
-  goog.style.setPosition(this.arrow_elem_,size.width/2);
+  var size = goog.style.getSize(elem);
+  goog.style.setPosition(this.arrow_elem_, size.width / 2);
   var pos = new goog.positioning.AnchoredPosition(anchor_elem,
-    goog.positioning.Corner.BOTTOM_LEFT);  
+    goog.positioning.Corner.BOTTOM_LEFT);
   pos.reposition(elem, goog.positioning.Corner.TOP_LEFT,
-      new goog.math.Box(7, 0, 0, anchor_size.width/2 - size.width/2));
- }
+      new goog.math.Box(7, 0, 0, anchor_size.width / 2 - size.width / 2));
+ };
 
 /**
  * Creates an initial DOM representation for the component.
@@ -129,18 +129,18 @@ logdx.sch.tooltip.prototype.setPosition = function() {
 logdx.sch.tooltip.prototype.createDom = function() {
   /** Create element.*/
   var elem = goog.dom.createDom(
-      'div',{ 'class' : goog.getCssName('log-tooltip'),
+      'div', { 'class' : goog.getCssName('log-tooltip'),
               'style': 'display:none;',
-              'role':'tooltip', 'aria-live': 'polite'});  
+              'role': 'tooltip', 'aria-live': 'polite'});
   var label = goog.dom.createDom(
-      'div',{ 'class' : goog.getCssName('log-tooltip-text')});  
+      'div', { 'class' : goog.getCssName('log-tooltip-text')});
 
   var arrow = goog.dom.createDom('div',
-      {'class':goog.getCssName('log-tooltip-arrow')});
+      {'class': goog.getCssName('log-tooltip-arrow')});
   var back = goog.dom.createDom('div',
-      {'class':goog.getCssName('log-tooltip-arrow-back')});
+      {'class': goog.getCssName('log-tooltip-arrow-back')});
   var front = goog.dom.createDom('div',
-      {'class':goog.getCssName('log-tooltip-arrow-front')});
+      {'class': goog.getCssName('log-tooltip-arrow-front')});
 
   goog.dom.appendChild(arrow, back);
   goog.dom.appendChild(arrow, front);
@@ -162,7 +162,7 @@ logdx.sch.tooltip.prototype.decorateInternal = function(element) {
   this.setElementInternal(element);
   var elem = this.getElement();
   elem.tabIndex = 0;
-  
+
   this.lb_elem_ = goog.dom.getElementByClass(
     goog.getCssName('log-tooltip-text'), elem);
 
@@ -248,7 +248,7 @@ logdx.sch.tooltip.prototype.clearShowTimer = function() {
 logdx.sch.tooltip.prototype.maybeHide = function() {
   this.hideTimer = undefined;
   var text = this.getText();
-  if( text == this.text_){
+  if (text == this.text_) {
     this.setVisible(false);
   }
 };
@@ -258,11 +258,11 @@ logdx.sch.tooltip.prototype.maybeHide = function() {
  * @protected
  */
 logdx.sch.tooltip.prototype.startHideTimer = function() {
-  if(!this.getElement()){
+  if (!this.getElement()) {
     return;
   }
   var isVisible = goog.style.isElementShown(this.getElement());
-  if(isVisible && !this.hideTimer) {
+  if (isVisible && !this.hideTimer) {
     this.hideTimer = goog.Timer.callOnce(
         goog.bind(this.maybeHide, this), this.hideDelayMs_);
   }
@@ -274,7 +274,7 @@ logdx.sch.tooltip.prototype.startHideTimer = function() {
  * @protected
  */
 logdx.sch.tooltip.prototype.clearHideTimer = function() {
-  if(this.hideTimer) {
+  if (this.hideTimer) {
     goog.Timer.clear(this.hideTimer);
     this.hideTimer = undefined;
   }

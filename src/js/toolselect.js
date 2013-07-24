@@ -58,8 +58,9 @@ logdx.sch.toolselect.prototype.dispose = function() {
 logdx.sch.toolselect.prototype.onZoom = function() {
   if (this.shape) {
     var zoom = this.canvas.getZoom();
-    var stroke = new goog.graphics.Stroke(0.2 / zoom, 'rgba(128,0,128,0.8)');
-    this.shape.setStroke(stroke);
+    //var stroke = new goog.graphics.Stroke(0.2 / zoom, 'rgba(128,0,128,0.8)');
+    //this.shape.setStroke(stroke);
+    this.shape.setAttributes({'stroke-width' : 0.2 / zoom});
   }
 };
 /**
@@ -80,9 +81,14 @@ logdx.sch.toolselect.prototype.onMouseDown = function() {
     this.p0 = this.event.mm_offset.clone();
   }
   else {
-    var fill = new goog.graphics.SolidFill('#800080', 0.2);
-    this.shape = this.canvas.graphics.drawRect(
-      this.event.mm_offset.x, this.event.mm_offset.y, 0, 0, null, fill);
+    //var fill = new goog.graphics.SolidFill('#800080', 0.2);
+    this.shape = this.canvas.svg.drawRect(
+      this.event.mm_offset.x, this.event.mm_offset.y, 0, 0);
+    this.shape.setAttributes({'fill' : '#800080',
+                              'fill-opacity' : 0.2,
+                              'stroke' : '#800080',
+                              'stroke-opacity' : 0.8
+                             });
     this.onZoom();
   }
 };
@@ -112,7 +118,7 @@ logdx.sch.toolselect.prototype.onMouseDrag = function() {
  */
 logdx.sch.toolselect.prototype.onMouseUp = function() {
   if (this.shape) {
-    this.canvas.graphics.removeElement(this.shape);
+    this.canvas.svg.removeElement(this.shape);
     this.shape.dispose();
     this.shape = null;
   }

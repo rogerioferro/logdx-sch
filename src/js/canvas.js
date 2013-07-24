@@ -16,15 +16,13 @@ goog.require('goog.events.KeyCodes');
 goog.require('goog.events.KeyHandler');
 goog.require('goog.events.KeyHandler.EventType');
 goog.require('goog.events.MouseWheelHandler');
-//goog.require('goog.graphics');
-//goog.require('goog.graphics.Font');
-goog.require('goog.graphics.SvgGraphics');
 goog.require('goog.math');
 goog.require('goog.style');
 goog.require('goog.ui.Component');
 goog.require('logdx.sch.figure');
 goog.require('logdx.sch.tool');
 goog.require('logdx.sch.tool.MouseEvent');
+goog.require('logdx.svg.Canvas');
 
 
 /**
@@ -74,13 +72,15 @@ logdx.sch.canvas = function(ppi, opt_domHelper) {
    */
   this.zoom_level_ = 1;
 
+//   * @type {goog.graphics.AbstractGraphics?}
+
   /**
-   * Graphics object. This object is created once the
+   * SVG object. This object is created once the
    * component's DOM element is known.
    *
-   * @type {goog.graphics.AbstractGraphics?}
+   * @type {logdx.svg.Canvas?}
    */
-  this.graphics = null;
+  this.svg = null;
 
   /**
    * Sheet Size in mm.
@@ -183,7 +183,7 @@ logdx.sch.canvas.prototype.setPpi = function(ppi) {
   this.ppmm_.width = this.ppi_.width / 25.4;
   this.ppmm_.height = this.ppi_.height / 25.4;
 
-  this.resize(goog.style.getSize(this.graphics.getElement()));
+  this.resize(goog.style.getSize(this.svg.getElement()));
 };
 
 /**
@@ -206,7 +206,7 @@ logdx.sch.canvas.prototype.setZoom = function(zoom, opt_cursor) {
   this.zoom_level_ = zoom;
   this.dispatchEvent(logdx.sch.canvas.EventType.ZOOM);
 
-  this.resize(goog.style.getSize(this.graphics.getElement()));
+  this.resize(goog.style.getSize(this.svg.getElement()));
 
   var diff = opt_cursor || new goog.math.Coordinate();
 
@@ -219,7 +219,7 @@ logdx.sch.canvas.prototype.setZoom = function(zoom, opt_cursor) {
  * Fit to Screen
  * */
 logdx.sch.canvas.prototype.fitToScreen = function() {
-  var size = goog.style.getSize(this.graphics.getElement());
+  var size = goog.style.getSize(this.svg.getElement());
   var w_mm = size.width / this.ppmm_.width;
   var h_mm = size.height / this.ppmm_.height;
 
@@ -244,15 +244,14 @@ logdx.sch.canvas.prototype.resize = function(size) {
   /** Set new size. */
   var w = size.width;
   var h = size.height;
-  this.graphics.setSize(w, h);
+  this.svg.setSize(w, h);
   /** Scale graphics area. */
   var gwz = (this.ppmm_.width * this.zoom_level_);
   var ghz = (this.ppmm_.height * this.zoom_level_);
-  this.graphics.setCoordSize(w / gwz, h / ghz);
+  this.svg.setCoordSize(w / gwz, h / ghz);
   this.pan(0, 0);
 
-  var stroke = new goog.graphics.Stroke('1px', '#d4d4d4');
-  this.sheet.setStroke(stroke);
+  this.sheet.setAttributes({'stroke-width' : 1/gwz});
 };
 
 /**
@@ -268,27 +267,28 @@ logdx.sch.canvas.prototype.pan = function(dx, dy) {
   var ddx = 0.5 / gwz;
   var ddy = 0.5 / ghz;
 
-  this.graphics.setCoordOrigin(-this.sheet_pos_.x - ddx,
+  this.svg.setCoordOrigin(-this.sheet_pos_.x - ddx,
                                -this.sheet_pos_.y - ddy);
 };
 /**
  * Creates an initial DOM representation for the component.
- */
+ * @override
+*/
 logdx.sch.canvas.prototype.createDom = function() {
 
   /** Create background.*/
   var elem = goog.dom.createElement('div');
   goog.dom.classes.add(elem, goog.getCssName('log-canvas-background'));
 
-  this.graphics = new goog.graphics.SvgGraphics(0, 0);
-  this.graphics.createDom();
-  this.graphics.render(elem);
+  this.svg = new logdx.svg.Canvas(0, 0);
+  this.svg.createDom();
+  this.svg.render(elem);
 
 
   /** Create sheet.*/
-  var fill = new goog.graphics.SolidFill('white');
-  this.sheet = this.graphics.drawRect(0, 0,
-    this.sheet_size_in_mm_.width, this.sheet_size_in_mm_.height, null, fill);
+  this.sheet = this.svg.drawRect(0, 0,
+    this.sheet_size_in_mm_.width, this.sheet_size_in_mm_.height);
+  this.sheet.setAttributes({'fill':'#fff','stroke':'#d4d4d4'});
 
   /** decorate it.*/
   this.decorateInternal(elem);
@@ -390,7 +390,7 @@ logdx.sch.canvas.prototype.exitDocument = function() {
  * @param {goog.events.Event} event The mouse event.
  */
 logdx.sch.canvas.prototype.setPointer = function(tool, event) {
-  var s_pos = goog.style.getClientPosition(this.graphics.getElement());
+  var s_pos = goog.style.getClientPosition(this.svg.getElement());
   var gwz = (this.ppmm_.width * this.zoom_level_);
   var ghz = (this.ppmm_.height * this.zoom_level_);
   var px_client_x = event.clientX;
@@ -470,7 +470,7 @@ logdx.sch.canvas.prototype.onClicked_ = function(event) {
 
     this.drawRect(x, y, w, h, null, fill);
     this.drawEllipse(x,y, w, h, null, fill);
-    //this.graphics.drawRect(0, 0, 3.3333, 3.3333, null, fill);
+    //this.svg.drawRect(0, 0, 3.3333, 3.3333, null, fill);
   }
   /**/
 };

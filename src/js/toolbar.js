@@ -96,12 +96,15 @@ logdx.sch.toolbar.prototype.addMenuBar = function(toolbar) {
     goog.getCssName('goog-icon-file'), 'Ctrl+N');
   var open_item = this.addMenuItem(file_menu, 'Open...',
     goog.getCssName('goog-icon-folder-open'));
-  var rename_item = this.addMenuItem(file_menu, 'Rename...');
-  var make_copy_item = this.addMenuItem(file_menu, 'Make a copy...');
+  var rename_item = this.addMenuItem(file_menu, 'Rename...',
+    goog.getCssName('goog-icon-edit'));
+  var make_copy_item = this.addMenuItem(file_menu, 'Make a copy...',
+    goog.getCssName('goog-icon-copy'));
   var download_item = this.addMenuItem(file_menu, 'Download as PDF',
-    goog.getCssName('goog-icon-download'));
+    goog.getCssName('goog-icon-cloud-download'));
   file_menu.addChild(new goog.ui.MenuSeparator(), true);
-  var setup_item = this.addMenuItem(file_menu, 'Setup...');
+  var setup_item = this.addMenuItem(file_menu, 'Setup...',
+    goog.getCssName('goog-icon-setup'));
 
   setup_item.listen(goog.ui.Component.EventType.ACTION, function(e) {
     this.app.setupDialog();
@@ -123,7 +126,8 @@ logdx.sch.toolbar.prototype.addMenuBar = function(toolbar) {
     goog.getCssName('goog-icon-cut'), 'Ctrl+X');
   this.addMenuItem(edit_menu, 'Paste',
     goog.getCssName('goog-icon-paste'), 'Ctrl+V');
-  this.addMenuItem(edit_menu, 'Delete', undefined, 'Del');
+  this.addMenuItem(edit_menu, 'Delete',
+    goog.getCssName('goog-icon-trash'), 'Del');
 
   /**
    * File Button

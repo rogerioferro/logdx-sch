@@ -142,3 +142,23 @@
 .goog-icon-grab {
   background-position: 0 -32px;
 }
+
+/* Setup. */
+.goog-icon-setup {
+  background-position: -16px -32px;
+}
+
+/* Edit. */
+.goog-icon-edit {
+  background-position: -32px -32px;
+}
+
+/* Cloud Download. */
+.goog-icon-cloud-download {
+  background-position: -48px -32px;
+}
+
+/* Trash. */
+.goog-icon-trash {
+  background-position: -64px -32px;
+}

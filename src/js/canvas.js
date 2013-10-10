@@ -3,8 +3,8 @@
  *
  * @author rogerioferro@gmail.com (Rogério Ferro do Nascimento)
  */
-goog.provide('logdx.sch.canvas');
-goog.provide('logdx.sch.canvas.EventType');
+goog.provide('logdx.sch.Canvas');
+goog.provide('logdx.sch.Canvas.EventType');
 
 goog.require('goog.dom');
 goog.require('goog.dom.classes');
@@ -19,7 +19,7 @@ goog.require('goog.events.MouseWheelHandler');
 goog.require('goog.math');
 goog.require('goog.style');
 goog.require('goog.ui.Component');
-goog.require('logdx.sch.figure');
+goog.require('logdx.sch.Figure');
 goog.require('logdx.sch.tool');
 goog.require('logdx.sch.tool.MouseEvent');
 goog.require('logdx.svg.Canvas');
@@ -34,7 +34,7 @@ goog.require('logdx.svg.Canvas');
  * @extends {goog.ui.Component}
  * @constructor
  */
-logdx.sch.canvas = function(ppi, opt_domHelper) {
+logdx.sch.Canvas = function(ppi, opt_domHelper) {
   goog.ui.Component.call(this, opt_domHelper);
 
   /**
@@ -45,7 +45,7 @@ logdx.sch.canvas = function(ppi, opt_domHelper) {
 
   /**
    * List of Figures.
-   * @type {Array.<logdx.sch.figure>}
+   * @type {Array.<logdx.sch.Figure>}
    */
   this.figures = new Array();
 
@@ -64,7 +64,6 @@ logdx.sch.canvas = function(ppi, opt_domHelper) {
   this.ppmm_ = new goog.math.Size(this.ppi_.width / 25.4,
                                   this.ppi_.height / 25.4);
 
-
   /**
    * Zoom factor.
    * @type {number}
@@ -80,7 +79,22 @@ logdx.sch.canvas = function(ppi, opt_domHelper) {
    *
    * @type {logdx.svg.Canvas?}
    */
-  this.svg = null;
+  this.svg_ = null;
+  
+  /**
+   * Group to figures elements
+   *
+   * @type {logdx.svg.GroupElement?}
+   */
+  this.figureGroup_  = null;
+
+  /**
+   * Group to handles elements
+   *
+   * @type {logdx.svg.GroupElement?}
+   */
+  this.handleGroup_ = null;
+
 
   /**
    * Sheet Size in mm.
@@ -123,25 +137,34 @@ logdx.sch.canvas = function(ppi, opt_domHelper) {
    */
   this.mwh_ = null;
 };
-goog.inherits(logdx.sch.canvas, goog.ui.Component);
+goog.inherits(logdx.sch.Canvas, goog.ui.Component);
 
 
 /**
  * Custom events.
  * @enum {string}
  */
-logdx.sch.canvas.EventType = {
+logdx.sch.Canvas.EventType = {
   /** Dispatched before the apply zoom. */
   ZOOM: 'zoom'
 };
 
 /**
  * Add Figure to Canvas
- * @param {logdx.sch.figure} figure Tool object.
+ * @param {logdx.sch.Figure} figure Tool object.
  */
-logdx.sch.canvas.prototype.addFigure = function(figure) {
+logdx.sch.Canvas.prototype.addFigure = function(figure) {
   figure.setCanvas(this);
-  goog.array.insert(this.figures, figure);
+  //goog.array.insert(this.figures, figure);
+  this.figures.push(figure);
+};
+
+/**
+ * Get Group to draw figures
+ * @return {logdx.svg.GroupElement}
+ */
+logdx.sch.Canvas.prototype.getFigureGroup = function() {
+  return this.figureGroup_;
 };
 
 /**
@@ -149,7 +172,7 @@ logdx.sch.canvas.prototype.addFigure = function(figure) {
  * @param {logdx.sch.tool} tool Tool object.
  * @param {goog.events.BrowserEvent.MouseButton=} opt_button Mouse button.
  */
-logdx.sch.canvas.prototype.setTool = function(tool, opt_button) {
+logdx.sch.Canvas.prototype.setTool = function(tool, opt_button) {
   var button = opt_button || goog.events.BrowserEvent.MouseButton.LEFT;
   if (this.tools[button]) {
     this.tools[button].dispose();
@@ -163,7 +186,7 @@ logdx.sch.canvas.prototype.setTool = function(tool, opt_button) {
 * Set sheet size in "mm".
 * @param {goog.math.Size} size of container.
 * */
-logdx.sch.canvas.prototype.setSheetSize = function(size) {
+logdx.sch.Canvas.prototype.setSheetSize = function(size) {
   this.sheet_size_in_mm_.width = size.width;
   this.sheet_size_in_mm_.height = size.height;
 
@@ -176,21 +199,21 @@ logdx.sch.canvas.prototype.setSheetSize = function(size) {
 * Set ppi.
 * @param {goog.math.Size} ppi PPI size.
 * */
-logdx.sch.canvas.prototype.setPpi = function(ppi) {
+logdx.sch.Canvas.prototype.setPpi = function(ppi) {
   this.ppi_.width = ppi.width;
   this.ppi_.height = ppi.height;
 
   this.ppmm_.width = this.ppi_.width / 25.4;
   this.ppmm_.height = this.ppi_.height / 25.4;
 
-  this.resize(goog.style.getSize(this.svg.getElement()));
+  this.resize(goog.style.getSize(this.svg_.getElement()));
 };
 
 /**
  * getZoom
  * @return {number}
  * */
-logdx.sch.canvas.prototype.getZoom = function() {
+logdx.sch.Canvas.prototype.getZoom = function() {
   return this.zoom_level_;
 };
 /**
@@ -198,15 +221,15 @@ logdx.sch.canvas.prototype.getZoom = function() {
  * @param {number} zoom Zoom Level.
  * @param {goog.math.Coordinate=} opt_cursor Cursor position.
  **/
-logdx.sch.canvas.prototype.setZoom = function(zoom, opt_cursor) {
+logdx.sch.Canvas.prototype.setZoom = function(zoom, opt_cursor) {
   zoom = Math.min(Math.max(0.01, zoom), 12);
 
   var g = this.zoom_level_ / zoom;
 
   this.zoom_level_ = zoom;
-  this.dispatchEvent(logdx.sch.canvas.EventType.ZOOM);
+  this.dispatchEvent(logdx.sch.Canvas.EventType.ZOOM);
 
-  this.resize(goog.style.getSize(this.svg.getElement()));
+  this.resize(goog.style.getSize(this.svg_.getElement()));
 
   var diff = opt_cursor || new goog.math.Coordinate();
 
@@ -218,8 +241,8 @@ logdx.sch.canvas.prototype.setZoom = function(zoom, opt_cursor) {
 /**
  * Fit to Screen
  * */
-logdx.sch.canvas.prototype.fitToScreen = function() {
-  var size = goog.style.getSize(this.svg.getElement());
+logdx.sch.Canvas.prototype.fitToScreen = function() {
+  var size = goog.style.getSize(this.svg_.getElement());
   var w_mm = size.width / this.ppmm_.width;
   var h_mm = size.height / this.ppmm_.height;
 
@@ -240,18 +263,24 @@ logdx.sch.canvas.prototype.fitToScreen = function() {
  * Resize canvas
  * @param {goog.math.Size} size of container.
  * */
-logdx.sch.canvas.prototype.resize = function(size) {
+logdx.sch.Canvas.prototype.resize = function(size) {
   /** Set new size. */
   var w = size.width;
   var h = size.height;
-  this.svg.setSize(w, h);
+  this.svg_.setSize(w, h);
   /** Scale graphics area. */
   var gwz = (this.ppmm_.width * this.zoom_level_);
   var ghz = (this.ppmm_.height * this.zoom_level_);
-  this.svg.setCoordSize(w / gwz, h / ghz);
+  this.svg_.setCoordSize(w / gwz, h / ghz);
   this.pan(0, 0);
 
   this.sheet.setAttributes({'stroke-width' : 1/gwz});
+
+  var width = 0.2/this.zoom_level_;
+  var dash = (5*width) + ',' + (2.5*width);
+  this.handleGroup_.setAttributes({'stroke-width' : width,
+                                   'stroke-dasharray' : dash
+                                  });
 };
 
 /**
@@ -259,7 +288,7 @@ logdx.sch.canvas.prototype.resize = function(size) {
  * @param {number} dx
  * @param {number} dy
  * */
-logdx.sch.canvas.prototype.pan = function(dx, dy) {
+logdx.sch.Canvas.prototype.pan = function(dx, dy) {
   this.sheet_pos_.x += dx;
   this.sheet_pos_.y += dy;
   var gwz = (this.ppmm_.width * this.zoom_level_);
@@ -267,29 +296,33 @@ logdx.sch.canvas.prototype.pan = function(dx, dy) {
   var ddx = 0.5 / gwz;
   var ddy = 0.5 / ghz;
 
-  this.svg.setCoordOrigin(-this.sheet_pos_.x - ddx,
+  this.svg_.setCoordOrigin(-this.sheet_pos_.x - ddx,
                                -this.sheet_pos_.y - ddy);
 };
 /**
  * Creates an initial DOM representation for the component.
  * @override
 */
-logdx.sch.canvas.prototype.createDom = function() {
+logdx.sch.Canvas.prototype.createDom = function() {
 
   /** Create background.*/
   var elem = goog.dom.createElement('div');
   goog.dom.classes.add(elem, goog.getCssName('log-canvas-background'));
 
-  this.svg = new logdx.svg.Canvas(0, 0);
-  this.svg.createDom();
-  this.svg.render(elem);
-
+  this.svg_ = new logdx.svg.Canvas(0, 0);
+  this.svg_.createDom();
+  this.svg_.render(elem);
 
   /** Create sheet.*/
-  this.sheet = this.svg.drawRect(0, 0,
+  this.sheet = this.svg_.drawRect(0, 0,
     this.sheet_size_in_mm_.width, this.sheet_size_in_mm_.height);
   this.sheet.setAttributes({'fill':'#fff','stroke':'#d4d4d4'});
 
+  /** Create Groups of each shape type*/
+  this.figureGroup_ = this.svg_.createGroup();
+  this.handleGroup_ = this.svg_.createGroup();
+  this.handleGroup_.setAttributes({'fill' : 'none', 'stroke' : '#02f'});
+  
   /** decorate it.*/
   this.decorateInternal(elem);
 };
@@ -300,15 +333,15 @@ logdx.sch.canvas.prototype.createDom = function() {
  *
  * @param {Element} element The DIV element to decorate.
  */
-logdx.sch.canvas.prototype.decorateInternal = function(element) {
-  //logdx.sch.canvas.superClass_.decorateInternal.call(this, element);
+logdx.sch.Canvas.prototype.decorateInternal = function(element) {
+  //logdx.sch.Canvas.superClass_.decorateInternal.call(this, element);
   this.setElementInternal(element);
   var elem = this.getElement();
   elem.tabIndex = 0;
 };
 
 /** @override */
-logdx.sch.canvas.prototype.disposeInternal = function() {
+logdx.sch.Canvas.prototype.disposeInternal = function() {
   this.eh_.dispose();
   if (this.kh_) {
     this.kh_.dispose();
@@ -323,7 +356,7 @@ logdx.sch.canvas.prototype.disposeInternal = function() {
 /**
  * Called when component's element is known to be in the document.
  */
-logdx.sch.canvas.prototype.enterDocument = function() {
+logdx.sch.Canvas.prototype.enterDocument = function() {
   goog.base(this, 'enterDocument');
 
   var parent = goog.dom.getParentElement(this.getElement());
@@ -361,7 +394,7 @@ logdx.sch.canvas.prototype.enterDocument = function() {
  * Called when component's element is known to have been removed from the
  * document.
  */
-logdx.sch.canvas.prototype.exitDocument = function() {
+logdx.sch.Canvas.prototype.exitDocument = function() {
   goog.base(this, 'exitDocument');
 
   this.eh_.unlisten(this.mwh_,
@@ -383,14 +416,33 @@ logdx.sch.canvas.prototype.exitDocument = function() {
 //    this.onKey_);
 };
 
+logdx.sch.Canvas.prototype.clearHandle = function() {
+  if (this.handleShape) { 
+    this.svg_.removeElement(this.handleShape);
+    this.handleShape = null;
+  }
+};
+
+logdx.sch.Canvas.prototype.setHandle = function(bounds, rot) {
+  if (!this.handleShape) {
+    this.handleShape = this.svg_.drawRect(0, 0, 0, 0, this.handleGroup_);
+  }
+  this.handleShape.setSize(bounds.width, bounds.height);
+  this.transformHandle( bounds.left, bounds.top, 0);
+}
+
+logdx.sch.Canvas.prototype.transformHandle = function(x, y, rot) {
+  this.handleGroup_.setTransformation(x, y, rot, 0, 0);
+};
+
 
 /**
  * Set the mouse position on tool.
  * @param {logdx.sch.tool} tool Tool object.
  * @param {goog.events.Event} event The mouse event.
  */
-logdx.sch.canvas.prototype.setPointer = function(tool, event) {
-  var s_pos = goog.style.getClientPosition(this.svg.getElement());
+logdx.sch.Canvas.prototype.setPointer = function(tool, event) {
+  var s_pos = goog.style.getClientPosition(this.svg_.getElement());
   var gwz = (this.ppmm_.width * this.zoom_level_);
   var ghz = (this.ppmm_.height * this.zoom_level_);
   var px_client_x = event.clientX;
@@ -432,7 +484,7 @@ logdx.sch.canvas.prototype.setPointer = function(tool, event) {
  * @param {goog.events.Event} event The click event.
  */
 
-logdx.sch.canvas.prototype.handleMouseWheel = function(event) {
+logdx.sch.Canvas.prototype.handleMouseWheel = function(event) {
   event.preventDefault();
   var tool = this.tools[goog.events.BrowserEvent.MouseButton.MIDDLE];
   if (tool) {
@@ -445,7 +497,7 @@ logdx.sch.canvas.prototype.handleMouseWheel = function(event) {
  * @param {goog.events.Event} event
  * @private
  */
-logdx.sch.canvas.prototype.onPopup_ = function(event) {
+logdx.sch.Canvas.prototype.onPopup_ = function(event) {
   event.preventDefault();
 };
 /**
@@ -453,7 +505,7 @@ logdx.sch.canvas.prototype.onPopup_ = function(event) {
  * @param {goog.events.Event} event The click event.
  * @private
  */
-logdx.sch.canvas.prototype.onClicked_ = function(event) {
+logdx.sch.Canvas.prototype.onClicked_ = function(event) {
   event.preventDefault();
   /*
   if (event.button == goog.events.BrowserEvent.MouseButton.LEFT) {
@@ -470,7 +522,7 @@ logdx.sch.canvas.prototype.onClicked_ = function(event) {
 
     this.drawRect(x, y, w, h, null, fill);
     this.drawEllipse(x,y, w, h, null, fill);
-    //this.svg.drawRect(0, 0, 3.3333, 3.3333, null, fill);
+    //this.svg_.drawRect(0, 0, 3.3333, 3.3333, null, fill);
   }
   /**/
 };
@@ -479,7 +531,7 @@ logdx.sch.canvas.prototype.onClicked_ = function(event) {
  * @param {goog.events.Event} event
  * @private
  */
-logdx.sch.canvas.prototype.onMouseDown_ = function(event) {
+logdx.sch.Canvas.prototype.onMouseDown_ = function(event) {
   event.preventDefault();
   var tool = this.tools[event.button];
   if (tool) {
@@ -494,14 +546,13 @@ logdx.sch.canvas.prototype.onMouseDown_ = function(event) {
  * @param {goog.events.Event} event
  * @private
  */
-logdx.sch.canvas.prototype.onMouseMove_ = function(event) {
+logdx.sch.Canvas.prototype.onMouseMove_ = function(event) {
   event.preventDefault();
   goog.array.forEachRight(this.tools, function(tool, i, arr) {
     this.setPointer(tool, event);
     if (tool.event.mouse_down) {
       tool.onMouseDrag();
     }else {
-      //console.log(tool.event.mm_offset.toString());
       tool.onMouseMove();
     }
   },this);
@@ -511,7 +562,7 @@ logdx.sch.canvas.prototype.onMouseMove_ = function(event) {
  * @param {goog.events.Event} event
  * @private
  */
-logdx.sch.canvas.prototype.onMouseUp_ = function(event) {
+logdx.sch.Canvas.prototype.onMouseUp_ = function(event) {
   event.preventDefault();
   var tool = this.tools[event.button];
   if (tool) {
@@ -527,11 +578,9 @@ logdx.sch.canvas.prototype.onMouseUp_ = function(event) {
  * @param {goog.events.Event} event The key event.
  * @private
  */
-logdx.sch.canvas.prototype.onKey_ = function(event) {
-  //console.log('key...');
+logdx.sch.Canvas.prototype.onKey_ = function(event) {
   var keyCodes = goog.events.KeyCodes;
   if (event.keyCode == keyCodes.SPACE || event.keyCode == keyCodes.ENTER) {
-    //console.log('key pressed...');
     goog.dom.classes.add(this.getElement(),
       goog.getCssName('log-canvas-move'));
   }

@@ -26,7 +26,7 @@ goog.inherits(logdx.sch.toolpan, logdx.sch.tool);
 /**
  * setCanvas
  *
- * @param {logdx.sch.canvas} canvas Canvas object.
+ * @param {logdx.sch.Canvas} canvas Canvas object.
  *
  * @override
  */

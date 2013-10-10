@@ -26,7 +26,16 @@ goog.require('goog.math.Coordinate');
  */
 logdx.svg.Element = function(element, svgCanvas) {
   goog.events.EventTarget.call(this);
+
   this.element_ = element;
+  
+  /** 
+   * expose native SVG element function getBBox
+   * @expose 
+   */
+  this.element_.getBBox;
+
+
   this.svgCanvas_ = svgCanvas;
 
   /**

@@ -19,7 +19,7 @@ logdx.sch.tool = function() {
   
   /**
    * Canvas object.
-   * @type {logdx.sch.canvas?}
+   * @type {logdx.sch.Canvas?}
    */
   this.canvas = null;
   
@@ -40,7 +40,7 @@ logdx.sch.tool.prototype.dispose = function() {
 /**
  * setCanvas
  * 
- * @param {logdx.sch.canvas} canvas Canvas object.
+ * @param {logdx.sch.Canvas} canvas Canvas object.
  */
 logdx.sch.tool.prototype.setCanvas = function(canvas) {
   this.canvas = canvas;

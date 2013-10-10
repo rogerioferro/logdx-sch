@@ -25,13 +25,13 @@ goog.inherits(logdx.sch.toolselect, logdx.sch.tool);
 /**
  * setCanvas
  *
- * @param {logdx.sch.canvas} canvas Canvas object.
+ * @param {logdx.sch.Canvas} canvas Canvas object.
  *
  * @override
  */
 logdx.sch.toolselect.prototype.setCanvas = function(canvas) {
   logdx.sch.toolselect.superClass_.setCanvas.call(this, canvas);
-  this.canvas.listen(logdx.sch.canvas.EventType.ZOOM,
+  this.canvas.listen(logdx.sch.Canvas.EventType.ZOOM,
     this.onZoom, false, this);
   goog.dom.classes.add(this.canvas.getElement(),
     goog.getCssName('log-cursor-pointer'));
@@ -42,7 +42,7 @@ logdx.sch.toolselect.prototype.setCanvas = function(canvas) {
  * @override
  */
 logdx.sch.toolselect.prototype.dispose = function() {
-  this.canvas.unlisten(logdx.sch.canvas.EventType.ZOOM,
+  this.canvas.unlisten(logdx.sch.Canvas.EventType.ZOOM,
     this.onZoom);
   goog.dom.classes.remove(this.canvas.getElement(),
     goog.getCssName('log-cursor-pointer'));
@@ -71,7 +71,7 @@ logdx.sch.toolselect.prototype.onZoom = function() {
 logdx.sch.toolselect.prototype.onMouseDown = function() {
   this.onMouseUp();
   this.figure = null;
-  goog.array.forEachRight(this.canvas.figures, function(figure, i, arr) {
+  goog.array.forEach(this.canvas.figures, function(figure, i, arr) {
     if (figure.contains(this.event.mm_offset)) {
       this.figure = figure;
       return false;
@@ -79,10 +79,13 @@ logdx.sch.toolselect.prototype.onMouseDown = function() {
   },this);
   if (this.figure) {
     this.p0 = this.event.mm_offset.clone();
+    this.figure.shape.setAttributes({'opacity' : 0.5});
+    this.canvas.setHandle(this.figure.bounds, 0);
   }
   else {
     //var fill = new goog.graphics.SolidFill('#800080', 0.2);
-    this.shape = this.canvas.svg.drawRect(
+    this.canvas.clearHandle();
+    this.shape = this.canvas.svg_.drawRect(
       this.event.mm_offset.x, this.event.mm_offset.y, 0, 0);
     this.shape.setAttributes({'fill' : '#800080',
                               'fill-opacity' : 0.2,
@@ -99,8 +102,9 @@ logdx.sch.toolselect.prototype.onMouseDown = function() {
  */
 logdx.sch.toolselect.prototype.onMouseDrag = function() {
   if (this.figure) {
-    this.figure.translate(
-      goog.math.Coordinate.difference(this.event.mm_offset, this.p0));
+    var diff = goog.math.Coordinate.difference(this.event.mm_offset, this.p0);
+    this.figure.translate( diff );
+    this.canvas.transformHandle(this.figure.bounds.left, this.figure.bounds.top, 0);
     this.p0 = this.event.mm_offset.clone();
   }
   else {
@@ -118,8 +122,11 @@ logdx.sch.toolselect.prototype.onMouseDrag = function() {
  */
 logdx.sch.toolselect.prototype.onMouseUp = function() {
   if (this.shape) {
-    this.canvas.svg.removeElement(this.shape);
+    this.canvas.svg_.removeElement(this.shape);
     this.shape.dispose();
     this.shape = null;
+  }
+  if (this.figure) {
+    this.figure.shape.setAttributes({'opacity' : 1});    
   }
 };

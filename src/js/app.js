@@ -4,13 +4,14 @@ goog.require('goog.dom');
 goog.require('goog.dom.ViewportSizeMonitor');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
+goog.require('goog.math');
 goog.require('goog.style');
 goog.require('goog.ui.Button');
 goog.require('goog.ui.Dialog');
 goog.require('goog.ui.SplitPane');
-goog.require('logdx.sch.canvas');
-goog.require('logdx.sch.canvas.EventType');
-goog.require('logdx.sch.figure');
+goog.require('logdx.sch.Canvas');
+goog.require('logdx.sch.Canvas.EventType');
+goog.require('logdx.sch.Figure');
 goog.require('logdx.sch.paper');
 goog.require('logdx.sch.sheet.orientation');
 goog.require('logdx.sch.sheet.size');
@@ -46,9 +47,9 @@ logdx.sch.app = function(parent) {
   this.library = new goog.ui.Component();
   /**
    * Canvas object.
-   * @type {logdx.sch.canvas}
+   * @type {logdx.sch.Canvas}
    */
-  this.canvas = new logdx.sch.canvas(this.ppi);
+  this.canvas = new logdx.sch.Canvas(this.ppi);
   this.canvas.setSheetSize(new goog.math.Size(
       this.paper.getWidth(), this.paper.getHeight()));
 
@@ -71,7 +72,7 @@ logdx.sch.app = function(parent) {
   goog.events.listen(vsm, goog.events.EventType.RESIZE, content_resize);
   content_resize();
 
-  this.canvas.listen(logdx.sch.canvas.EventType.ZOOM, function(e) {
+  this.canvas.listen(logdx.sch.Canvas.EventType.ZOOM, function(e) {
     this.toolbar.updateZoom(e.target.getZoom());
   },false, this);
 
@@ -81,10 +82,15 @@ logdx.sch.app = function(parent) {
   this.canvas.setTool(new logdx.sch.toolpan(),
     goog.events.BrowserEvent.MouseButton.MIDDLE);
 
-  var fig1 = new logdx.sch.figure();
-  var fig2 = new logdx.sch.figure();
+  var fig1 = new logdx.sch.Figure();
+  var fig2 = new logdx.sch.Figure();
+
   this.canvas.addFigure(fig1);
   this.canvas.addFigure(fig2);
+
+  fig1.moveTo(new goog.math.Coordinate(20, 50));
+  fig2.moveTo(new goog.math.Coordinate(100, 100));
+
 
   //console.log('x:'+this.dpi.width+';y:'+this.dpi.height);
 };

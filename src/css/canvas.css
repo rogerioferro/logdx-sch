@@ -6,17 +6,17 @@
 
 
 .log-cursor-pointer {
-  cursor : url('../img/icn_cursor_pointer.cur'), crosshair;
+  cursor : url('../img/icn_cursor_pointer.cur'), url('img/icn_cursor_pointer.cur'), crosshair;
 }
 
 .log-cursor-move {
-  cursor : url('../img/icn_cursor_move.cur'), move;
+  cursor : url('../img/icn_cursor_move.cur'), url('img/icn_cursor_move.cur'), move;
 }
 
 .log-cursor-grab {
-  cursor : url('../img/icn_cursor_grab.cur'), move;
+  cursor : url('../img/icn_cursor_grab.cur'), url('img/icn_cursor_grab.cur'),move;
 }
 
 .log-cursor-grabbing {
-  cursor : url('../img/icn_cursor_grabbing.cur'), move !important;
+  cursor : url('../img/icn_cursor_grabbing.cur'), url('img/icn_cursor_grabbing.cur'), move !important;
 }

@@ -64,6 +64,18 @@ logdx.svg.Canvas = function(width, height,
    * @protected
    */
   this.coordHeight = opt_coordHeight || null;
+  
+    /**
+   * Whether to manually implement viewBox by using a coordinate transform.
+   * As of 1/11/08 this is necessary for Safari 3 but not for the nightly
+   * WebKit build. Apply to webkit versions < 526. 525 is the
+   * last version used by Safari 3.1.
+   * @type {boolean}
+   * @private
+   */
+  this.useManualViewbox_ = goog.userAgent.WEBKIT &&
+                           !goog.userAgent.isVersionOrHigher(526);
+  
 };
 goog.inherits(logdx.svg.Canvas, goog.ui.Component);
 
@@ -216,9 +228,44 @@ logdx.svg.Canvas.prototype.setViewBox_ = function() {
   if (this.coordWidth || this.coordLeft || this.coordTop) {
     var element = this.getElement();
     element.setAttribute('preserveAspectRatio', 'none');
-    element.setAttribute('viewBox', this.getViewBox_());
+    if (this.useManualViewbox_) {
+      this.updateManualViewBox_();
+    } else {
+      element.setAttribute('viewBox', this.getViewBox_());
+    }
   }
 };
+
+/**
+ * Updates the transform of the root element to fake a viewBox.  Should only
+ * be called when useManualViewbox_ is set.
+ * @private
+ */
+logdx.svg.Canvas.prototype.updateManualViewBox_ = function() {
+  if (!this.isInDocument() ||
+      !(this.coordWidth || this.coordLeft || !this.coordTop)) {
+    return;
+  }
+
+  var size = this.getPixelSize();
+  if (size.width == 0) {
+    // In Safari, invisible SVG is sometimes shown.  Explicitly hide it.
+    this.getElement().style.visibility = 'hidden';
+    return;
+  }
+
+  this.getElement().style.visibility = '';
+
+  var offsetX = - this.coordLeft;
+  var offsetY = - this.coordTop;
+  var scaleX = size.width / this.coordWidth;
+  var scaleY = size.height / this.coordHeight;
+
+  this.canvasElement.getElement().setAttribute('transform',
+      'scale(' + scaleX + ' ' + scaleY + ') ' +
+      'translate(' + offsetX + ' ' + offsetY + ')');
+};
+
 
 /**
  * Change the size of the canvas.

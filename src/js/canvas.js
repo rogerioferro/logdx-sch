@@ -206,7 +206,7 @@ logdx.sch.Canvas.prototype.setPpi = function(ppi) {
   this.ppmm_.width = this.ppi_.width / 25.4;
   this.ppmm_.height = this.ppi_.height / 25.4;
 
-  this.resize(goog.style.getSize(this.svg_.getElement()));
+  this.resize(this.curSize);
 };
 
 /**
@@ -228,8 +228,8 @@ logdx.sch.Canvas.prototype.setZoom = function(zoom, opt_cursor) {
 
   this.zoom_level_ = zoom;
   this.dispatchEvent(logdx.sch.Canvas.EventType.ZOOM);
-
-  this.resize(goog.style.getSize(this.svg_.getElement()));
+  
+  this.resize(this.curSize);
 
   var diff = opt_cursor || new goog.math.Coordinate();
 
@@ -242,12 +242,15 @@ logdx.sch.Canvas.prototype.setZoom = function(zoom, opt_cursor) {
  * Fit to Screen
  * */
 logdx.sch.Canvas.prototype.fitToScreen = function() {
-  var size = goog.style.getSize(this.svg_.getElement());
+  var size = this.curSize;
+  
   var w_mm = size.width / this.ppmm_.width;
   var h_mm = size.height / this.ppmm_.height;
 
+
   var z_w = w_mm / this.sheet_size_in_mm_.width;
   var z_h = h_mm / this.sheet_size_in_mm_.height;
+  
   var z = Math.min(z_w, z_h);
 
   this.setZoom(z);
@@ -264,6 +267,9 @@ logdx.sch.Canvas.prototype.fitToScreen = function() {
  * @param {goog.math.Size} size of container.
  * */
 logdx.sch.Canvas.prototype.resize = function(size) {
+  
+  /** Store size*/
+  this.curSize = size.clone();
   /** Set new size. */
   var w = size.width;
   var h = size.height;
@@ -442,7 +448,9 @@ logdx.sch.Canvas.prototype.transformHandle = function(x, y, rot) {
  * @param {goog.events.Event} event The mouse event.
  */
 logdx.sch.Canvas.prototype.setPointer = function(tool, event) {
-  var s_pos = goog.style.getClientPosition(this.svg_.getElement());
+  
+  var s_pos = goog.style.getClientPosition(this.getElement());
+  
   var gwz = (this.ppmm_.width * this.zoom_level_);
   var ghz = (this.ppmm_.height * this.zoom_level_);
   var px_client_x = event.clientX;

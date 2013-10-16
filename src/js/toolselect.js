@@ -8,8 +8,7 @@
 
  goog.require('goog.math');
  goog.require('logdx.sch.tool');
-
-
+ goog.require('logdx.sch.Action');
 
 /**
  * Select class
@@ -19,6 +18,18 @@
  */
 logdx.sch.toolselect = function() {
   logdx.sch.tool.call(this);
+  
+  /**
+   * Figure clicked.
+   * @type {logdx.sch.Figure?}
+   */
+  this.figureClicked = null;
+  
+  /**
+   * Action to execute
+   * @type {logdx.sch.Action?}
+   */
+  this.action = null;
 };
 goog.inherits(logdx.sch.toolselect, logdx.sch.tool);
 
@@ -58,34 +69,36 @@ logdx.sch.toolselect.prototype.dispose = function() {
 logdx.sch.toolselect.prototype.onZoom = function() {
   if (this.shape) {
     var zoom = this.canvas.getZoom();
-    //var stroke = new goog.graphics.Stroke(0.2 / zoom, 'rgba(128,0,128,0.8)');
-    //this.shape.setStroke(stroke);
     this.shape.setAttributes({'stroke-width' : 0.2 / zoom});
   }
 };
+
 /**
  * onMouseDown
  *
  * @override
  */
 logdx.sch.toolselect.prototype.onMouseDown = function() {
-  this.onMouseUp();
-  this.figure = null;
-  goog.array.forEach(this.canvas.figures, function(figure, i, arr) {
-    if (figure.contains(this.event.mm_offset)) {
-      this.figure = figure;
-      return false;
+  this.clearShape();
+  if (this.action != null) {
+    if (this.action == logdx.sch.Action.SELECT) {
+      this.clearSelection();
+      this.figureClicked.select();
+      this.action = logdx.sch.Action.MOVE;
     }
-  },this);
-  if (this.figure) {
     this.p0 = this.event.mm_offset.clone();
-    this.figure.shape.setAttributes({'opacity' : 0.5});
-    this.canvas.setHandle(this.figure.bounds, 0);
+    if (this.action == logdx.sch.Action.MOVE) {
+      goog.array.forEach(this.canvas.selected, function(figure, i, arr){
+        figure.setOpacity(0.5);
+      },this);        
+    }
+    else{
+      this.figureClicked.setOpacity(0.5);
+    }
   }
-  else {
-    //var fill = new goog.graphics.SolidFill('#800080', 0.2);
-    this.canvas.clearHandle();
-    this.shape = this.canvas.svg_.drawRect(
+  else {    
+    this.clearSelection();
+    this.shape = this.canvas.getSvg().drawRect(
       this.event.mm_offset.x, this.event.mm_offset.y, 0, 0);
     this.shape.setAttributes({'fill' : '#800080',
                               'fill-opacity' : 0.2,
@@ -101,18 +114,28 @@ logdx.sch.toolselect.prototype.onMouseDown = function() {
  * @override
  */
 logdx.sch.toolselect.prototype.onMouseDrag = function() {
-  if (this.figure) {
-    var diff = goog.math.Coordinate.difference(this.event.mm_offset, this.p0);
-    this.figure.translate( diff );
-    this.canvas.transformHandle(this.figure.bounds.left, this.figure.bounds.top, 0);
+  if (this.action != null) {
+    switch (this.action) {
+      default:
+      case logdx.sch.Action.MOVE:
+        var diff = goog.math.Coordinate.difference(
+                          this.event.mm_offset, this.p0);
+        goog.array.forEach(this.canvas.selected, function(figure, i, arr){
+          figure.translate(diff);
+        },this);        
+        break;
+    }
     this.p0 = this.event.mm_offset.clone();
   }
   else {
     var w = this.event.mm_offset.x - this.event.mm_offset_down.x;
     var h = this.event.mm_offset.y - this.event.mm_offset_down.y;
-    this.shape.setSize(Math.max(0.1, Math.abs(w)), Math.max(0.1, Math.abs(h)));
-    this.shape.setPosition(this.event.mm_offset_down.x + Math.min(0, w),
-    this.event.mm_offset_down.y + Math.min(0, h));
+    var left = this.event.mm_offset_down.x + Math.min(0, w);
+    var top = this.event.mm_offset_down.y + Math.min(0, h);
+    var width = Math.max(0.1, Math.abs(w));
+    var height = Math.max(0.1, Math.abs(h));
+    this.shape.setSize(width, height);
+    this.shape.setPosition(left, top);
   }
 };
 /**
@@ -121,12 +144,48 @@ logdx.sch.toolselect.prototype.onMouseDrag = function() {
  * @override
  */
 logdx.sch.toolselect.prototype.onMouseUp = function() {
+  goog.array.forEach(this.canvas.selected, function(figure, i, arr){
+    figure.setOpacity(1);
+  },this);        
+  if (this.action == null) {
+    this.clearSelection();
+    goog.array.forEach(this.canvas.figures, function(figure, i, arr){
+      if (figure.isInside(this.shape)) {
+        figure.select();
+      }
+    },this);
+  }
+  else {
+    this.action = null;
+  }
+  this.clearShape();
+};
+
+/**
+ * Clear selection shape
+ */
+logdx.sch.toolselect.prototype.clearShape = function() {
   if (this.shape) {
-    this.canvas.svg_.removeElement(this.shape);
-    this.shape.dispose();
+    this.canvas.getSvg().removeElement(this.shape);
     this.shape = null;
   }
-  if (this.figure) {
-    this.figure.shape.setAttributes({'opacity' : 1});    
+};
+
+/**
+ * Clear selection list
+ */
+logdx.sch.toolselect.prototype.clearSelection = function() {
+  while (this.canvas.selected.length > 0) {
+    this.canvas.selected.pop().unselect(true);
   }
+};
+
+/**
+ * Some figure was clicked
+ * @param {logdx.sch.Figure} figure Figure clicked.
+ * @param {logdx.sch.Action} action Action to execute.
+ */
+logdx.sch.toolselect.prototype.clicked = function(figure, action) {
+  this.action = action;
+  this.figureClicked = figure;
 };

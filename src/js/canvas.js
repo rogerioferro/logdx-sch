@@ -24,7 +24,6 @@ goog.require('logdx.sch.tool');
 goog.require('logdx.sch.tool.MouseEvent');
 goog.require('logdx.svg.Canvas');
 
-
 /**
  * Canvas component
  *
@@ -36,18 +35,6 @@ goog.require('logdx.svg.Canvas');
  */
 logdx.sch.Canvas = function(ppi, opt_domHelper) {
   goog.ui.Component.call(this, opt_domHelper);
-
-  /**
-   * List of Tools.
-   * @type {Array.<logdx.sch.tool>}
-   */
-  this.tools = new Array();
-
-  /**
-   * List of Figures.
-   * @type {Array.<logdx.sch.Figure>}
-   */
-  this.figures = new Array();
 
   /**
    * PPI size (pixels per inch).
@@ -71,7 +58,6 @@ logdx.sch.Canvas = function(ppi, opt_domHelper) {
    */
   this.zoom_level_ = 1;
 
-//   * @type {goog.graphics.AbstractGraphics?}
 
   /**
    * SVG object. This object is created once the
@@ -95,6 +81,23 @@ logdx.sch.Canvas = function(ppi, opt_domHelper) {
    */
   this.handleGroup_ = null;
 
+  /**
+   * List of Tools.
+   * @type {Array.<logdx.sch.tool>}
+   */
+  this.tools = [];
+
+  /**
+   * List of Figures.
+   * @type {Array.<logdx.sch.Figure>}
+   */
+  this.figures = [];
+  
+  /**
+   * List of Figures Selected.
+   * @type {Array.<logdx.sch.Figure>}
+   */
+  this.selected = [];
 
   /**
    * Sheet Size in mm.
@@ -150,14 +153,13 @@ logdx.sch.Canvas.EventType = {
 };
 
 /**
- * Add Figure to Canvas
- * @param {logdx.sch.Figure} figure Tool object.
+ * Get Svg object 
+ * @return {logdx.svg.Canvas}
  */
-logdx.sch.Canvas.prototype.addFigure = function(figure) {
-  figure.setCanvas(this);
-  //goog.array.insert(this.figures, figure);
-  this.figures.push(figure);
+logdx.sch.Canvas.prototype.getSvg = function() {
+  return this.svg_;
 };
+
 
 /**
  * Get Group to draw figures
@@ -165,6 +167,14 @@ logdx.sch.Canvas.prototype.addFigure = function(figure) {
  */
 logdx.sch.Canvas.prototype.getFigureGroup = function() {
   return this.figureGroup_;
+};
+
+/**
+ * Get Group to draw handles
+ * @return {logdx.svg.GroupElement}
+ */
+logdx.sch.Canvas.prototype.getHandleGroup = function() {
+  return this.handleGroup_;
 };
 
 /**
@@ -181,6 +191,15 @@ logdx.sch.Canvas.prototype.setTool = function(tool, opt_button) {
   this.tools[button].setCanvas(this);
 };
 
+
+/**
+ * Get toolselect object
+ * @return {logdx.sch.toolselect?}
+ */
+logdx.sch.Canvas.prototype.getToolSelect = function () {
+  var tool = this.tools[goog.events.BrowserEvent.MouseButton.LEFT];
+  return tool instanceof logdx.sch.toolselect ? tool : null;
+};
 
 /**
 * Set sheet size in "mm".
@@ -277,7 +296,11 @@ logdx.sch.Canvas.prototype.resize = function(size) {
   /** Scale graphics area. */
   var gwz = (this.ppmm_.width * this.zoom_level_);
   var ghz = (this.ppmm_.height * this.zoom_level_);
-  this.svg_.setCoordSize(w / gwz, h / ghz);
+  
+  w /= gwz;
+  h /= ghz;
+  
+  this.svg_.setCoordSize(w,h);
   this.pan(0, 0);
 
   this.sheet.setAttributes({'stroke-width' : 1/gwz});
@@ -301,9 +324,11 @@ logdx.sch.Canvas.prototype.pan = function(dx, dy) {
   var ghz = (this.ppmm_.height * this.zoom_level_);
   var ddx = 0.5 / gwz;
   var ddy = 0.5 / ghz;
+  
+  var x = -this.sheet_pos_.x - ddx;
+  var y = -this.sheet_pos_.y - ddy;
 
-  this.svg_.setCoordOrigin(-this.sheet_pos_.x - ddx,
-                               -this.sheet_pos_.y - ddy);
+  this.svg_.setCoordOrigin(x,y);
 };
 /**
  * Creates an initial DOM representation for the component.
@@ -327,7 +352,9 @@ logdx.sch.Canvas.prototype.createDom = function() {
   /** Create Groups of each shape type*/
   this.figureGroup_ = this.svg_.createGroup();
   this.handleGroup_ = this.svg_.createGroup();
-  this.handleGroup_.setAttributes({'fill' : 'none', 'stroke' : '#02f'});
+  this.handleGroup_.setAttributes({'fill' : '#800080',
+                                   'fill-opacity': 0.1,
+                                   'stroke' : '#800080'});
   
   /** decorate it.*/
   this.decorateInternal(elem);
@@ -367,22 +394,23 @@ logdx.sch.Canvas.prototype.enterDocument = function() {
 
   var parent = goog.dom.getParentElement(this.getElement());
   goog.style.setStyle(parent, 'overflow', 'hidden');
+  
 
   this.mwh_ = new goog.events.MouseWheelHandler(this.getElement());
   this.eh_.listen(this.mwh_,
     goog.events.MouseWheelHandler.EventType.MOUSEWHEEL,
     this.handleMouseWheel);
 
-  this.eh_.listen(this.getElement(), goog.events.EventType.CONTEXTMENU,
-    this.onPopup_);
-  this.eh_.listen(this.getElement(), goog.events.EventType.CLICK,
-    this.onClicked_);
-  this.eh_.listen(this.getElement(), goog.events.EventType.MOUSEDOWN,
-    this.onMouseDown_);
-  this.eh_.listen(this.getElement(), goog.events.EventType.MOUSEMOVE,
-    this.onMouseMove_);
-  this.eh_.listen(this.getElement(), goog.events.EventType.MOUSEUP,
-    this.onMouseUp_);
+  this.eh_.listen(this.getElement(),
+    goog.events.EventType.CONTEXTMENU, this.onPopup_);
+  this.eh_.listen(this.getElement(), 
+    goog.events.EventType.CLICK, this.onClicked_);
+  this.eh_.listen(this.getElement(),
+    goog.events.EventType.MOUSEDOWN, this.onMouseDown_);
+  this.eh_.listen(this.getElement(),
+    goog.events.EventType.MOUSEMOVE, this.onMouseMove_);
+  this.eh_.listen(this.getElement(),
+    goog.events.EventType.MOUSEUP, this.onMouseUp_);
 
 //  this.eh_.listen(goog.dom.getDocument(), goog.events.EventType.KEYDOWN,
 //    this.onKey_);
@@ -407,40 +435,37 @@ logdx.sch.Canvas.prototype.exitDocument = function() {
     goog.events.MouseWheelHandler.EventType.MOUSEWHEEL,
     this.handleMouseWheel);
 
-  this.eh_.unlisten(this.getElement(), goog.events.EventType.CONTEXTMENU,
-    this.onPopup_);
-  this.eh_.unlisten(this.getElement(), goog.events.EventType.CLICK,
-    this.onClicked_);
-  this.eh_.unlisten(this.getElement(), goog.events.EventType.MOUSEDOWN,
-    this.onMouseDown_);
-  this.eh_.unlisten(this.getElement(), goog.events.EventType.MOUSEMOVE,
-    this.onMouseMove_);
-  this.eh_.unlisten(this.getElement(), goog.events.EventType.MOUSEUP,
-    this.onMouseUp_);
+  this.eh_.unlisten(this.getElement(),
+    goog.events.EventType.CONTEXTMENU, this.onPopup_);
+  this.eh_.unlisten(this.getElement(),
+    goog.events.EventType.CLICK, this.onClicked_);
+  this.eh_.unlisten(this.getElement(),
+    goog.events.EventType.MOUSEDOWN, this.onMouseDown_);
+  this.eh_.unlisten(this.getElement(),
+    goog.events.EventType.MOUSEMOVE, this.onMouseMove_);
+  this.eh_.unlisten(this.getElement(),
+    goog.events.EventType.MOUSEUP, this.onMouseUp_);
 
 //  this.eh_.unlisten(this.kh_, goog.events.KeyHandler.EventType.KEY,
 //    this.onKey_);
 };
 
-logdx.sch.Canvas.prototype.clearHandle = function() {
-  if (this.handleShape) { 
-    this.svg_.removeElement(this.handleShape);
-    this.handleShape = null;
-  }
+
+/**
+ * Convert coordinate to canvas reference.
+ * @param {Number} x position x.
+ * @param {Number} y position y.
+ * @return {goog.math.Coordinate}
+ */
+logdx.sch.Canvas.prototype.clientToCanvas = function(x, y) {
+//  var bounds = this.getElement().getBoundingClientRect();
+  var pos = goog.style.getClientPosition(this.getElement());
+  var gwz = (this.ppmm_.width * this.zoom_level_);
+  var ghz = (this.ppmm_.height * this.zoom_level_);
+  pos.x = (x - pos.x) / gwz - this.sheet_pos_.x;
+  pos.y = (y - pos.y) / ghz - this.sheet_pos_.y;
+  return pos;
 };
-
-logdx.sch.Canvas.prototype.setHandle = function(bounds, rot) {
-  if (!this.handleShape) {
-    this.handleShape = this.svg_.drawRect(0, 0, 0, 0, this.handleGroup_);
-  }
-  this.handleShape.setSize(bounds.width, bounds.height);
-  this.transformHandle( bounds.left, bounds.top, 0);
-}
-
-logdx.sch.Canvas.prototype.transformHandle = function(x, y, rot) {
-  this.handleGroup_.setTransformation(x, y, rot, 0, 0);
-};
-
 
 /**
  * Set the mouse position on tool.

@@ -85,11 +85,28 @@ logdx.sch.app = function(parent) {
   var fig1 = new logdx.sch.Figure();
   var fig2 = new logdx.sch.Figure();
 
-  this.canvas.addFigure(fig1);
-  this.canvas.addFigure(fig2);
-
   fig1.moveTo(new goog.math.Coordinate(20, 50));
+  
   fig2.moveTo(new goog.math.Coordinate(100, 100));
+  fig2.rotate(45);
+
+  fig1.addToCanvas(this.canvas);
+  fig1.select();
+  fig2.addToCanvas(this.canvas);
+  fig2.select();
+  
+  var i = 9;
+  while(--i){
+    var f = new logdx.sch.Figure();
+    f.moveTo(new goog.math.Coordinate(100, 50));
+    f.rotate(45 * i + 15);
+    f.addToCanvas(this.canvas);
+    f.select();
+  }
+  
+  //fig1.remove();
+  //fig1.addToCanvas(this.canvas);
+  
 
 
   //console.log('x:'+this.dpi.width+';y:'+this.dpi.height);

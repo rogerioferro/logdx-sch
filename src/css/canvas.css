@@ -17,6 +17,31 @@
   cursor : url('../img/icn_cursor_grab.cur'), url('img/icn_cursor_grab.cur'),move;
 }
 
+.log-cursor-nw-resize {
+  cursor : url('../img/icn_cursor_nw_se_resize.cur'), url('img/icn_cursor_nw_se_resize.cur'), nw-resize;
+}
+.log-cursor-n-resize {
+  cursor : url('../img/icn_cursor_n_s_resize.cur'), url('img/icn_cursor_n_s_resize.cur'), n-resize;
+}
+.log-cursor-ne-resize {
+  cursor : url('../img/icn_cursor_ne_sw_resize.cur'), url('img/icn_cursor_ne_sw_resize.cur'), ne-resize;
+}
+.log-cursor-w-resize {
+  cursor : url('../img/icn_cursor_w_e_resize.cur'), url('img/icn_cursor_w_e_resize.cur'), w-resize;
+}
+.log-cursor-e-resize {
+  cursor : url('../img/icn_cursor_w_e_resize.cur'), url('img/icn_cursor_w_e_resize.cur'), e-resize;
+}
+.log-cursor-sw-resize {
+  cursor : url('../img/icn_cursor_ne_sw_resize.cur'), url('img/icn_cursor_ne_sw_resize.cur'), sw-resize;
+}
+.log-cursor-s-resize {
+  cursor : url('../img/icn_cursor_n_s_resize.cur'), url('img/icn_cursor_n_s_resize.cur'), s-resize;
+}
+.log-cursor-se-resize {
+  cursor : url('../img/icn_cursor_nw_se_resize.cur'), url('img/icn_cursor_nw_se_resize.cur'), se-resize;
+}
+
 .log-cursor-grabbing {
   cursor : url('../img/icn_cursor_grabbing.cur'), url('img/icn_cursor_grabbing.cur'), move !important;
 }

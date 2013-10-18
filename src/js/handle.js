@@ -62,6 +62,8 @@ logdx.sch.Handle = function(figure) {
   this.eh_ = new goog.events.EventHandler(this);
   this.eh_.listen(this.svgMv.getElement(),
     goog.events.EventType.MOUSEDOWN, this.onMv, this);
+  this.eh_.listen(this.svgSE.getElement(),
+    goog.events.EventType.MOUSEDOWN, this.onSE, this);
     
 
   this.canvas_.listen(logdx.sch.Canvas.EventType.ZOOM,
@@ -78,6 +80,8 @@ goog.inherits(logdx.sch.Handle, goog.Disposable);
 logdx.sch.Handle.prototype.disposeInternal = function() {
   this.eh_.unlisten(this.svgMv.getElement(),
     goog.events.EventType.MOUSEDOWN, this.onMv, this);
+  this.eh_.unlisten(this.svgSE.getElement(),
+    goog.events.EventType.MOUSEDOWN, this.onSE, this);
 
   this.canvas_.unlisten(logdx.sch.Canvas.EventType.ZOOM,
     this.onZoom, false, this);
@@ -134,19 +138,17 @@ logdx.sch.Handle.prototype.updateSize_ = function() {
 logdx.sch.Handle.prototype.updateTransformation_ = function() {
   var f = this.figure_;
   this.svgElement_.setTransformation(f.x, f.y, f.rot, f.centerX, f.centerY);
-  var index = goog.math.safeFloor((((f.rot + 360) % 360 + 22.5) / 45 ) % 8);
+  var index = goog.math.safeFloor(((f.rot + 22.5) / 45 ) % 8);
   for (var i = 0; i < 8; i++){
     this.resizeShapes[i].setAttributes({'class':this.cursor[index++ % 8]})
   }
 };
-
 
 logdx.sch.Handle.prototype.remove = function() {
   if(this.svgElement_) {
     this.canvas_.getSvg().removeElement(this.svgElement_);
   }
 };
-
 
 /**
  * Handles SVG element Mouse Down event.
@@ -155,4 +157,12 @@ logdx.sch.Handle.prototype.remove = function() {
  */
 logdx.sch.Handle.prototype.onMv = function(event) {
   this.figure_.sendAction(logdx.sch.Action.MOVE);
+};
+/**
+ * Handles SVG element Mouse Down event.
+ * @param {goog.events.Event} event
+ * @private
+ */
+logdx.sch.Handle.prototype.onSE = function(event) {
+  this.figure_.sendAction(logdx.sch.Action.SE_RESIZE);
 };

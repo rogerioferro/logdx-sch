@@ -183,8 +183,7 @@ logdx.sch.Figure.prototype.translate = function(diff) {
  **/
 logdx.sch.Figure.prototype.rotate = function(angle) {
   var phi = angle%360;
-  if (phi > 180) phi -= 360; 
-  //console.log(phi);
+  if (phi < 0) phi += 360; 
   this.rot = phi;
   this.updateTransformation_();
 };

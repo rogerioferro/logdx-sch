@@ -93,6 +93,8 @@ logdx.sch.toolselect.prototype.onMouseDown = function() {
       },this);        
     }
     else{
+      if (this.action == logdx.sch.Action.SE_RESIZE) {
+      }
       this.figureClicked.setOpacity(0.5);
     }
   }

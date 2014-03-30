@@ -1,4 +1,5 @@
 goog.provide('logdx.sch.toolbar');
+goog.provide('logdx.sch.toolbar.tools');
 
 goog.require('goog.dom');
 goog.require('goog.events');
@@ -27,7 +28,7 @@ goog.require('logdx.sch.tooltip');
 * ToolBar Constructor.
 * @constructor
 * @param {Element} parent element.
-* @param {logdx.sch.app} app object.
+* @param {logdx.sch.App} app object.
 */
 logdx.sch.toolbar = function(parent, app) {
 
@@ -39,7 +40,7 @@ logdx.sch.toolbar = function(parent, app) {
 
   /**
    * App Object.
-   * @type {logdx.sch.app}
+   * @type {logdx.sch.App}
    */
   this.app = app;
 
@@ -57,15 +58,21 @@ logdx.sch.toolbar = function(parent, app) {
    * Selection Model used for Tools Buttons.
    * @type {goog.ui.SelectionModel}
    */
-  var sel_model = new goog.ui.SelectionModel();
-  sel_model.setSelectionHandler(function(button, select) {
+  this.toolSelectionModel = new goog.ui.SelectionModel();
+  this.toolSelectionModel.setSelectionHandler(function(button, select) {
     if (button) {
       button.setChecked(select);
     }
   });
+  
+  /**
+   * Tools Buttons indexed.
+   * @type {object}
+   */
+  this.toolButtons = {};
 
-  this.addToolsBar(toolbar, sel_model);
-  this.addZoomBar(toolbar, sel_model);
+  this.addToolsBar(toolbar);
+  this.addZoomBar(toolbar, this.toolSelectionModel);
 
   toolbar.render(this.parent);
 };
@@ -80,6 +87,14 @@ logdx.sch.toolbar.prototype.updateZoom = function(zoom) {
   var caption = ((z < 1000) ? z.toPrecision(3) : z.toFixed(0)) + '%';
   this.zoom_select_.setValue(caption);
   this.zoom_select_.setDefaultCaption(caption);
+};
+
+/**
+ * update Tools state at Toolbar.
+ */
+logdx.sch.toolbar.prototype.updateTool = function() {
+  this.toolSelectionModel.setSelectedItem(
+    this.toolButtons[this.app.getTool()]);
 };
 
 /**
@@ -175,23 +190,21 @@ logdx.sch.toolbar.prototype.addEditBar = function(toolbar) {
 /**
  * Add Tools Buttons on Toolbar.
  * @param {goog.ui.Toolbar} toolbar Toolbar object.
- * @param {goog.ui.SelectionModel} sel_model Selection Model.
  */
-logdx.sch.toolbar.prototype.addToolsBar = function(toolbar, sel_model) {
+logdx.sch.toolbar.prototype.addToolsBar = function(toolbar) {
   /**
    * Pointer Button
    * @type {goog.ui.ToolbarToggleButton}
    */
   var pointer_button = new goog.ui.ToolbarToggleButton(
     this.newIcon(goog.getCssName('goog-icon-cursor')));
+  this.toolButtons[logdx.sch.App.Tools.POINTER] = pointer_button;
   pointer_button.setAutoStates(goog.ui.Component.State.CHECKED, false);
-  sel_model.addItem(pointer_button);
-  sel_model.setSelectedItem(pointer_button);
+  this.toolSelectionModel.addItem(pointer_button);
   pointer_button.listen(goog.ui.Component.EventType.ACTION, function(e) {
     var btn = e.target;
     if (!btn.isChecked()) {
-      sel_model.setSelectedItem(e.target);
-      this.app.canvas.setTool(new logdx.sch.toolselect());
+      this.app.setTool(logdx.sch.App.Tools.POINTER);
     }
   },false, this);
   pointer_button.setCollapsed(goog.ui.ButtonSide.END);
@@ -204,19 +217,18 @@ logdx.sch.toolbar.prototype.addToolsBar = function(toolbar, sel_model) {
    */
   var move_button = new goog.ui.ToolbarToggleButton(
     this.newIcon(goog.getCssName('goog-icon-grab')));
+  this.toolButtons[logdx.sch.App.Tools.PAN] = move_button;
   move_button.setAutoStates(goog.ui.Component.State.CHECKED, false);
-  sel_model.addItem(move_button);
+  this.toolSelectionModel.addItem(move_button);
   move_button.listen(goog.ui.Component.EventType.ACTION, function(e) {
     var btn = e.target;
     if (!btn.isChecked()) {
-      sel_model.setSelectedItem(btn);
-      this.app.canvas.setTool(new logdx.sch.toolpan(true));
+      this.app.setTool(logdx.sch.App.Tools.PAN);
     }
   },false, this);
   move_button.setCollapsed(goog.ui.ButtonSide.START);
   toolbar.addChild(move_button, true);
   new logdx.sch.tooltip(move_button, 'Pan (Space + Drag)');
-
 };
 
 /**

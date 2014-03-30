@@ -1,7 +1,7 @@
 goog.provide('logdx.sch.init');
 
 goog.require('goog.dom');
-goog.require('logdx.sch.app');
+goog.require('logdx.sch.App');
 
 
 /**
@@ -13,7 +13,7 @@ logdx.sch.init = function() {
   var element = goog.dom.createDom('div', header);
   goog.dom.appendChild(document.body, element);
 
-  var app = new logdx.sch.app(document.body);
+  var app = new logdx.sch.App(document.body);
 };
 
 goog.exportSymbol('logdx.sch.init', logdx.sch.init);

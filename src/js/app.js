@@ -1,4 +1,4 @@
-goog.provide('logdx.sch.app');
+goog.provide('logdx.sch.App');
 
 goog.require('goog.dom');
 goog.require('goog.dom.ViewportSizeMonitor');
@@ -19,6 +19,8 @@ goog.require('logdx.sch.toolbar');
 goog.require('logdx.sch.toolpan');
 goog.require('logdx.sch.toolselect');
 
+
+
 /**
  * App Constructor.
  *
@@ -26,7 +28,7 @@ goog.require('logdx.sch.toolselect');
  *
  * @constructor
  */
-logdx.sch.app = function(parent) {
+logdx.sch.App = function(parent) {
 
   /** @type {goog.math.Size} */
   this.ppi = this.getMonitorPpi();
@@ -78,10 +80,24 @@ logdx.sch.app = function(parent) {
 
   this.canvas.fitToScreen();
 
-  this.canvas.setTool(new logdx.sch.toolselect());
+  //this.canvas.setTool(new logdx.sch.toolselect());
   this.canvas.setTool(new logdx.sch.toolpan(),
     goog.events.BrowserEvent.MouseButton.MIDDLE);
 
+	
+  this.setTool(logdx.sch.App.Tools.POINTER);
+  
+  /**
+   * Event handler for this object.
+   * @type {goog.events.EventHandler}
+   * @private
+   */
+  this.eh_ = new goog.events.EventHandler(this);
+  this.eh_.listen(document, goog.events.EventType.KEYDOWN, this.onKeyDown_);
+  this.eh_.listen(document, goog.events.EventType.KEYUP, this.onKeyUp_);
+	
+//----------------------------------------------------
+//Only for test purpose
   var fig1 = new logdx.sch.Figure();
   var fig2 = new logdx.sch.Figure();
 
@@ -106,16 +122,94 @@ logdx.sch.app = function(parent) {
   
   //fig1.remove();
   //fig1.addToCanvas(this.canvas);
+//----------------------------------------------------
   
 
 
   //console.log('x:'+this.dpi.width+';y:'+this.dpi.height);
 };
 
+
+/**
+ * Enum for tools types
+ * @enum {number}
+ */
+logdx.sch.App.Tools = {
+  POINTER   : 0,
+  PAN       : 1,
+  ZOOM_IN   : 2,
+  ZOOM_OUT  : 3
+};
+
+
+/**
+ * Set current Tool.
+ * @param {logdx.sch.App.Tools} tool Tool to set.
+ */
+logdx.sch.App.prototype.setTool = function(tool) {
+  if (this.tool == tool) return;
+  var tools = logdx.sch.App.Tools;
+  switch (tool) {
+    case tools.POINTER:
+      //console.log('POINTER');
+      this.canvas.setTool(new logdx.sch.toolselect());
+      break;
+    case tools.PAN:
+      //console.log('PAN');
+      this.canvas.setTool(new logdx.sch.toolpan(true));
+      break;
+  }
+  this.tool_ = tool;
+  this.toolbar.updateTool();
+};
+
+/**
+ * Get current Tool.
+ */
+logdx.sch.App.prototype.getTool = function() {
+  return this.tool_;
+};
+
+
+/**
+ * Fired when key goes down.
+ * @param {goog.events.Event} event The key event.
+ * @private
+ */
+logdx.sch.App.prototype.onKeyDown_ = function(event) {
+  if (!this.keyControl_){
+    var keyCodes = goog.events.KeyCodes;
+    switch (event.keyCode) {
+      case keyCodes.ESC:
+        this.setTool(logdx.sch.App.Tools.POINTER);
+        break;
+      case keyCodes.SPACE:
+        this.oldTool_ = this.tool_;
+        this.setTool(logdx.sch.App.Tools.PAN);
+        break;
+    }
+  }
+  this.keyControl_ = true;
+};
+/**
+ * Fired when key goes up.
+ * @param {goog.events.Event} event The key event.
+ * @private
+ */
+logdx.sch.App.prototype.onKeyUp_ = function(event) {
+  this.keyControl_ = false;
+  var keyCodes = goog.events.KeyCodes;
+  switch (event.keyCode) {
+    case keyCodes.SPACE:
+      this.setTool(this.oldTool_);
+      break;
+  }
+};
+
 /**
  * Setup Dialog.
  */
-logdx.sch.app.prototype.setupDialog = function() {
+logdx.sch.App.prototype.setupDialog = function() {
 
   var hp = goog.dom.createDom('p');
   var hlabel = goog.dom.createDom('label', {'for': 'hppi'});
@@ -182,7 +276,7 @@ logdx.sch.app.prototype.setupDialog = function() {
  * Get Monitor PPI.
  * @return {goog.math.Size}
  */
-logdx.sch.app.prototype.getMonitorPpi = function() {
+logdx.sch.App.prototype.getMonitorPpi = function() {
   var header = {'style': 'position:absolute;width:1000in; height:1000in;'};
   var element = goog.dom.createDom('div', header);
   goog.dom.appendChild(document.body, element);

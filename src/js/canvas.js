@@ -183,12 +183,14 @@ logdx.sch.Canvas.prototype.getHandleGroup = function() {
  * @param {goog.events.BrowserEvent.MouseButton=} opt_button Mouse button.
  */
 logdx.sch.Canvas.prototype.setTool = function(tool, opt_button) {
-  var button = opt_button || goog.events.BrowserEvent.MouseButton.LEFT;
-  if (this.tools[button]) {
-    this.tools[button].dispose();
+  if (tool){
+    var button = opt_button || goog.events.BrowserEvent.MouseButton.LEFT;
+    if (this.tools[button]) {
+      this.tools[button].dispose();
+    }
+    this.tools[button] = tool;
+    this.tools[button].setCanvas(this);
   }
-  this.tools[button] = tool;
-  this.tools[button].setCanvas(this);
 };
 
 
@@ -339,7 +341,7 @@ logdx.sch.Canvas.prototype.createDom = function() {
   /** Create background.*/
   var elem = goog.dom.createElement('div');
   goog.dom.classes.add(elem, goog.getCssName('log-canvas-background'));
-
+  
   this.svg_ = new logdx.svg.Canvas(0, 0);
   this.svg_.createDom();
   this.svg_.render(elem);
@@ -392,37 +394,23 @@ logdx.sch.Canvas.prototype.disposeInternal = function() {
 logdx.sch.Canvas.prototype.enterDocument = function() {
   goog.base(this, 'enterDocument');
 
-  var parent = goog.dom.getParentElement(this.getElement());
+  var elem = this.getElement();
+  var parent = goog.dom.getParentElement(elem);
   goog.style.setStyle(parent, 'overflow', 'hidden');
   
-
-  this.mwh_ = new goog.events.MouseWheelHandler(this.getElement());
+  this.mwh_ = new goog.events.MouseWheelHandler(elem);
   this.eh_.listen(this.mwh_,
-    goog.events.MouseWheelHandler.EventType.MOUSEWHEEL,
-    this.handleMouseWheel);
+    goog.events.MouseWheelHandler.EventType.MOUSEWHEEL, this.handleMouseWheel);
 
-  this.eh_.listen(this.getElement(),
-    goog.events.EventType.CONTEXTMENU, this.onPopup_);
-  this.eh_.listen(this.getElement(), 
-    goog.events.EventType.CLICK, this.onClicked_);
-  this.eh_.listen(this.getElement(),
-    goog.events.EventType.MOUSEDOWN, this.onMouseDown_);
-  this.eh_.listen(this.getElement(),
-    goog.events.EventType.MOUSEMOVE, this.onMouseMove_);
-  this.eh_.listen(this.getElement(),
-    goog.events.EventType.MOUSEUP, this.onMouseUp_);
+  this.eh_.listen(elem, goog.events.EventType.CONTEXTMENU, this.onPopup_);
+  this.eh_.listen(elem, goog.events.EventType.CLICK, this.onClicked_);
+  this.eh_.listen(elem, goog.events.EventType.MOUSEDOWN, this.onMouseDown_);
+  this.eh_.listen(elem, goog.events.EventType.MOUSEMOVE, this.onMouseMove_);
+  this.eh_.listen(elem, goog.events.EventType.MOUSEUP, this.onMouseUp_);
 
-//  this.eh_.listen(goog.dom.getDocument(), goog.events.EventType.KEYDOWN,
-//    this.onKey_);
-
-//  this.eh_.listen(goog.dom.getDocument(), goog.events.EventType.KEYUP,
-//    this.onKey_);
-
-//  this.kh_ = new goog.events.KeyHandler(this.getElement());
-//  this.kh_ = new goog.events.KeyHandler(goog.dom.getDocument());
-//  this.eh_.listen(this.kh_, goog.events.KeyHandler.EventType.KEY,
-//    this.onKey_);
-
+  //this.kh_ = new goog.events.KeyHandler(elem);
+  //this.eh_.listen(this.kh_,
+	//goog.events.KeyHandler.EventType.KEY, this.onKey_);
 };
 /**
  * Called when component's element is known to have been removed from the
@@ -431,23 +419,19 @@ logdx.sch.Canvas.prototype.enterDocument = function() {
 logdx.sch.Canvas.prototype.exitDocument = function() {
   goog.base(this, 'exitDocument');
 
+  var elem = this.getElement();
+
   this.eh_.unlisten(this.mwh_,
-    goog.events.MouseWheelHandler.EventType.MOUSEWHEEL,
-    this.handleMouseWheel);
+    goog.events.MouseWheelHandler.EventType.MOUSEWHEEL, this.handleMouseWheel);
 
-  this.eh_.unlisten(this.getElement(),
-    goog.events.EventType.CONTEXTMENU, this.onPopup_);
-  this.eh_.unlisten(this.getElement(),
-    goog.events.EventType.CLICK, this.onClicked_);
-  this.eh_.unlisten(this.getElement(),
-    goog.events.EventType.MOUSEDOWN, this.onMouseDown_);
-  this.eh_.unlisten(this.getElement(),
-    goog.events.EventType.MOUSEMOVE, this.onMouseMove_);
-  this.eh_.unlisten(this.getElement(),
-    goog.events.EventType.MOUSEUP, this.onMouseUp_);
+  this.eh_.unlisten(elem, goog.events.EventType.CONTEXTMENU, this.onPopup_);
+  this.eh_.unlisten(elem, goog.events.EventType.CLICK, this.onClicked_);
+  this.eh_.unlisten(elem, goog.events.EventType.MOUSEDOWN, this.onMouseDown_);
+  this.eh_.unlisten(elem, goog.events.EventType.MOUSEMOVE, this.onMouseMove_);
+  this.eh_.unlisten(elem, goog.events.EventType.MOUSEUP, this.onMouseUp_);
 
-//  this.eh_.unlisten(this.kh_, goog.events.KeyHandler.EventType.KEY,
-//    this.onKey_);
+  this.eh_.unlisten(this.kh_, 
+	goog.events.KeyHandler.EventType.KEY, this.onKey_);
 };
 
 
@@ -565,7 +549,7 @@ logdx.sch.Canvas.prototype.onClicked_ = function(event) {
  * @private
  */
 logdx.sch.Canvas.prototype.onMouseDown_ = function(event) {
-  event.preventDefault();
+  event.preventDefault(); //Default event = get focus.
   var tool = this.tools[event.button];
   if (tool) {
     tool.event.button = event.button;
@@ -612,9 +596,9 @@ logdx.sch.Canvas.prototype.onMouseUp_ = function(event) {
  * @private
  */
 logdx.sch.Canvas.prototype.onKey_ = function(event) {
+	//console.log("key pressed...");
   var keyCodes = goog.events.KeyCodes;
   if (event.keyCode == keyCodes.SPACE || event.keyCode == keyCodes.ENTER) {
-    goog.dom.classes.add(this.getElement(),
-      goog.getCssName('log-canvas-move'));
+	//console.log("space");
   }
 };

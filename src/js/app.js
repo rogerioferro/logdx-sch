@@ -11,7 +11,7 @@ goog.require('goog.ui.Dialog');
 goog.require('goog.ui.SplitPane');
 goog.require('logdx.sch.Canvas');
 goog.require('logdx.sch.Canvas.EventType');
-goog.require('logdx.sch.Figure');
+goog.require('logdx.sch.shape.Oval');
 goog.require('logdx.sch.paper');
 goog.require('logdx.sch.sheet.orientation');
 goog.require('logdx.sch.sheet.size');
@@ -98,8 +98,8 @@ logdx.sch.App = function(parent) {
 	
 //----------------------------------------------------
 //Only for test purpose
-  var fig1 = new logdx.sch.Figure();
-  var fig2 = new logdx.sch.Figure();
+  var fig1 = new logdx.sch.shape.Oval();
+  var fig2 = new logdx.sch.shape.Oval();
 
   fig1.moveTo(new goog.math.Coordinate(20, 50));
   
@@ -113,7 +113,7 @@ logdx.sch.App = function(parent) {
   
   var i = 9;
   while(--i){
-    var f = new logdx.sch.Figure();
+    var f = new logdx.sch.shape.Oval();
     f.moveTo(new goog.math.Coordinate(100, 50));
     f.rotate(45 * i + 15);
     f.addToCanvas(this.canvas);

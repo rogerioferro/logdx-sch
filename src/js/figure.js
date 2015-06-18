@@ -111,15 +111,12 @@ logdx.sch.Figure.prototype.addToCanvas = function(canvas) {
   this.svgElement_ = this.canvas_.getSvg()
       .createGroup(this.canvas_.getFigureGroup());
   
-  this.shape =this.canvas_.getSvg().drawEllipse( 0, 0, 5, 10,
-    this.svgElement_);
+  //this.shape =this.canvas_.getSvg().drawEllipse( 0, 0, 5, 10,
+  //  this.svgElement_);
+  this.createShape();
     
-  this.svgElement_.setAttributes({'fill' : '#800',
-                                  'fill-opacity' : 1,
-                                  'stroke' : '#000',
-                                  'stroke-width' : 0.2,
-                                  'class' : goog.getCssName('log-cursor-move')
-                                });
+  this.svgElement_.setAttributes(
+    {'class' : goog.getCssName('log-cursor-move')});
 
   var box = this.svgElement_.getElement().getBBox();
   this.bounds = new goog.math.Rect(box.x, box.y, box.width, box.height);
@@ -141,6 +138,20 @@ logdx.sch.Figure.prototype.remove = function() {
     this.svgElement_  = null;
     this.bounds       = null;
   }
+};
+
+/**
+* Create shape
+*/
+logdx.sch.Figure.prototype.createShape = function() {
+  this.shape =this.canvas_.getSvg().drawRect( 0, 0, 5, 5,
+    this.svgElement_);
+    
+  this.svgElement_.setAttributes({'fill' : '#ccc',
+                                  'fill-opacity' : 0.5,
+                                  'stroke' : '#000',
+                                  'stroke-width' : 0.2
+                                });
 };
 
 /**
